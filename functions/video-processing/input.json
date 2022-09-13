@@ -1,0 +1,10 @@
+{
+  "operations": {
+    "watermark": "watermark",
+    "gif": "extract-gif"
+  },
+  "duration": 1,
+  "videoPaths": [
+    "video.mp4"
+  ]
+}
