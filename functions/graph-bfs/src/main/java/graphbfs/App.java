@@ -17,25 +17,6 @@ import org.jgrapht.graph.SimpleGraph;
 import org.jgrapht.traverse.BreadthFirstIterator;
 import org.jgrapht.util.SupplierUtil;
 
-class Request {
-	int size;
-	
-	Request(int size) {
-		this.size = size;
-	}
-}
-
-class Response {
-	List<Integer> visitedVertex;
-	long generateTime, processTime;
-	
-	Response(List<Integer> visitedVertex, long generateTime, long processTime) {
-		this.visitedVertex = visitedVertex;
-		this.generateTime = generateTime;
-		this.processTime = processTime;
-	}
-}
-
 public class App {
 	
 	private List<Integer> bfs(Graph<Integer, DefaultEdge> graph, int vertex) {

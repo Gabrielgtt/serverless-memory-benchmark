@@ -10,31 +10,6 @@ import javax.imageio.ImageIO;
 
 import net.coobird.thumbnailator.Thumbnails;
 
-class Request {
-	// String inputBucket, outputBucket, key, accessKey, secretAccessKey, region;
-	int width, height;
-	String filepath, dest;
-	
-	Request(String filepath, String dest, int width, int height) {
-		this.width = width;
-		this.height = height;
-		this.filepath = filepath;
-		this.dest = dest;
-	}
-}
-
-class Response {
-	long fetchTime, saveTime, processTime, resizedSize, originalSize;
-	
-	Response(long fetchTime, long saveTime, long processTime, long resizedSize, long originalSize) {
-		this.fetchTime = fetchTime;
-		this.processTime = processTime;
-		this.saveTime = saveTime;
-		this.resizedSize = resizedSize;
-		this.originalSize = originalSize;
-	}
-}
-
 public class App {
 
 	//String inputBucket, outputBucket, key;

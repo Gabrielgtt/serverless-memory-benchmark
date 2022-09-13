@@ -12,24 +12,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 
-class Request {
-	String username;
-	int randomLen;
-	
-	public Request(String username, int randomLen) {
-		this.username = username;
-		this.randomLen = randomLen;
-	}
-}
-
-class Response {
-	String html;
-	
-	public Response(String html) {
-		this.html = html;
-	}
-}
-
 public class App 
 {
 

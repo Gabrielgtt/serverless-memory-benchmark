@@ -1,0 +1,8 @@
+{
+  "width": 200,
+  "height": 200,
+  "dest": "resized.jpg",
+  "filePaths": [
+    "sundown.jpeg"
+  ]
+}
