@@ -12,28 +12,6 @@ interface Runner {
 	public String run(String video, int duration) throws IOException;
 }
 
-class Request {
-	int duration;
-	String videoPath;
-	String op;
-	
-	Request(String videoPath, int duration, String op) {
-		this.duration = duration;
-		this.videoPath = videoPath;
-		this.op = op;
-	}
-}
-
-class Response {
-	
-	long processTime;
-
-	public Response(long processTime) {
-		this.processTime = processTime;
-	}
-	
-}
-
 public class App {
 	
 	private Map<String,Runner> operations;
