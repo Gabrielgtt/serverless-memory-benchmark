@@ -1,3 +1,5 @@
 {
-  "size": 2
+  "videoPath": "video.mp4",
+  "duration": 3,
+  "operation": "extract-gif"
 }

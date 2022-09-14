@@ -1,40 +1,98 @@
+import benchmark.*;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import sleep.*;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 
 public class Orchestrator {
-    private static final String SLEEP = "sleep";
-    private static final String DYNAMICHTML = "dynamic-html";
-    private static final String GRAPHBFS = "graph-bfs";
-    private static final String THUMBNAILER = "thumbnailer";
-    private static final String VIDEOPROCESSING = "video-processing";
     public static void sleep(String input, int n) throws Exception {
-        JSONParser parser = new JSONParser();
-        FileWriter file = new FileWriter("results/" + SLEEP + ".csv");
-        file.write("benchmark,req_id,init_time,end_time,duration\n");
+        Benchmark b = new Sleep();
 
-        Object obj = parser.parse(new FileReader(input));
-        JSONObject jsonObject = (JSONObject) obj;
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
         Long size = (Long) jsonObject.get("size");
-        System.out.println(size);
-
         String[] args = new String[]{"-s", String.valueOf(size)};
 
-        for (int i = 0; i < n; i++) {
-            System.gc();
-
-            System.out.println("Execution " + i);
-            long start = System.currentTimeMillis();
-            sleep.Main.main(args);
-            long end = System.currentTimeMillis();
-            long duration = end - start;
-
-            file.write(String.format("%s,%s,%s,%s,%s\n", SLEEP, i, start, end, duration));
-        }
+        b.execute(n, file, args);
 
         file.close();
+    }
+
+    public static void dynamicHTML(String input, int n) throws Exception {
+        Benchmark b = new DynamicHTML();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long length = (Long) jsonObject.get("length");
+        String user = (String) jsonObject.get("user");
+        String[] args = new String[]{"-user", user, "-len", String.valueOf(length)};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
+    public static void graphBFS(String input, int n) throws Exception {
+        Benchmark b = new GraphBFS();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long size = (Long) jsonObject.get("size");
+        String[] args = new String[]{"-size", String.valueOf(size)};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
+    public static void thumbnailer(String input, int n) throws Exception {
+        Benchmark b = new Thumbnailer();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long width = (Long) jsonObject.get("width");
+        Long height = (Long) jsonObject.get("height");
+        String filePath = (String) jsonObject.get("filePath");
+        String destPath = (String) jsonObject.get("destPath");
+        String[] args = new String[]{"-f", filePath, "-d", destPath, "-w", String.valueOf(width), "-h", String.valueOf(height)};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
+    public static void videoProcessing(String input, int n) throws Exception {
+        Benchmark b = new VideoProcessing();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long duration = (Long) jsonObject.get("duration");
+        String videoPath = (String) jsonObject.get("videoPath");
+        String operation = (String) jsonObject.get("operation");
+        String[] args = new String[]{"-v", videoPath, "-d", String.valueOf(duration), "-o", operation};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
+    private static JSONObject readInput(String input) throws IOException, ParseException {
+        JSONParser parser = new JSONParser();
+        Object obj = parser.parse(new FileReader(input));
+        JSONObject jsonObject = (JSONObject) obj;
+        return jsonObject;
+    }
+
+    private static FileWriter createOutputFile(String benchmark) throws IOException {
+        FileWriter file = new FileWriter("results/" + benchmark + ".csv");
+        file.write("benchmark,req_id,init_time,end_time,duration\n");
+        return file;
     }
 
 }

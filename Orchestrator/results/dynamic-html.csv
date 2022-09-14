@@ -1,0 +1,4 @@
+benchmark,req_id,init_time,end_time,duration
+dynamic-html,0,1663184718363,1663184718713,350
+dynamic-html,1,1663184718721,1663184718731,10
+dynamic-html,2,1663184718737,1663184718746,9

@@ -32,6 +32,18 @@ public class Main {
             case "sleep":
                 Orchestrator.sleep(input, iterations);
                 break;
+            case "dynamic-html":
+                Orchestrator.dynamicHTML(input,iterations);
+                break;
+            case "graph-bfs":
+                Orchestrator.graphBFS(input,iterations);
+                break;
+            case "thumbnailer":
+                Orchestrator.thumbnailer(input,iterations);
+                break;
+            case "video-processing":
+                Orchestrator.videoProcessing(input,iterations);
+                break;
             default:
                 throw new Exception("Unknown benchmark\n" + usage);
         }
