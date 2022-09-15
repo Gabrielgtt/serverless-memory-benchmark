@@ -37,7 +37,5 @@ public class Main {
         App app = new App();
 
         Response res = app.handler(req);
-
-        System.out.println(res.resizedSize);
     }
 }
