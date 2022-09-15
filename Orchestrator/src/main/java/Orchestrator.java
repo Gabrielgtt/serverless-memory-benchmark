@@ -82,6 +82,34 @@ public class Orchestrator {
         file.close();
     }
 
+    public static void fibonacci(String input, int n) throws Exception {
+        Benchmark b = new Fibonacci();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long ithNumber = (Long) jsonObject.get("n");
+        String[] args = new String[]{"-n", String.valueOf(ithNumber)};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
+    public static void factorial(String input, int n) throws Exception {
+        Benchmark b = new Factorial();
+
+        FileWriter file = createOutputFile(b.getName());
+        JSONObject jsonObject = readInput(input);
+
+        Long number = (Long) jsonObject.get("n");
+        String[] args = new String[]{"-n", String.valueOf(number)};
+
+        b.execute(n, file, args);
+
+        file.close();
+    }
+
     private static JSONObject readInput(String input) throws IOException, ParseException {
         JSONParser parser = new JSONParser();
         Object obj = parser.parse(new FileReader(input));

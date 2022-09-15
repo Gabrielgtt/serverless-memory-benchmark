@@ -44,6 +44,12 @@ public class Main {
             case "video-processing":
                 Orchestrator.videoProcessing(input,iterations);
                 break;
+            case "fibonacci":
+                Orchestrator.fibonacci(input,iterations);
+                break;
+            case "factorial":
+                Orchestrator.factorial(input,iterations);
+                break;
             default:
                 throw new Exception("Unknown benchmark\n" + usage);
         }
