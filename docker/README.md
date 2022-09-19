@@ -8,7 +8,7 @@
 sudo docker build --tag $REPOSITORY:$TAG --file docker/Dockerfile .
 ```
 
-## Create container
+## Create container and get container ID
 
 ```bash
 GCID=$(sudo docker run -it -d $REPOSITORY:$TAG)
@@ -24,4 +24,10 @@ sudo docker cp input.json $GCID:$(sudo docker inspect --format='{{.Config.Workin
 
 ```bash
 sudo docker exec $GCID bash -c "java -cp Orchestrator.jar Main [-b benchmark] [-i input] [-n iterations]"
+```
+
+## Collect results
+
+```bash
+sudo docker cp $GCID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $GCID)/results ./results
 ```
