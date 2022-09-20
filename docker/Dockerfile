@@ -1,6 +1,9 @@
 FROM ubuntu:20.04
 
-RUN apt update && apt install -y maven && apt install -y git && apt install -y ffmpeg
+RUN apt update
+RUN apt install -y maven
+RUN apt install -y git
+RUN apt install -y ffmpeg
 
 RUN git clone https://github.com/Gabrielgtt/serverless-memory-benchmark/
 ENV ORCHESTRATOR_PATH="serverless-memory-benchmark/Orchestrator"
