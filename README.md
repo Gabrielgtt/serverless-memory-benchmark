@@ -19,3 +19,14 @@ sudo mvn package
 ```bash
 java -cp {jar-file} Main [-b benchmark] [-i input] [-n iterations]
 ```
+
+## Benchmarks
+
+The benchmark available are:
+- sleep
+- dynamic-html
+- graph-bfs
+- thumbnailer
+- video-processing
+- fibonacci
+- factorial
