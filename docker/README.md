@@ -11,23 +11,23 @@ sudo docker build --tag $REPOSITORY:$TAG --file docker/Dockerfile .
 ## Create container and get container ID
 
 ```bash
-GCID=$(sudo docker run -it -d $REPOSITORY:$TAG)
+BENCHID=$(sudo docker run -it -d $REPOSITORY:$TAG)
 ```
 
 ## Create your input file and copy to container
 
 ```bash
-sudo docker cp input.json $GCID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $GCID)/input.json
+sudo docker cp input.json $BENCHID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $BENCHID)/input.json
 ```
 
 ## Execute your benchmark
 
 ```bash
-sudo docker exec $GCID bash -c "java -cp Orchestrator.jar Main [-b benchmark] [-i input] [-n iterations]"
+sudo docker exec $BENCHID bash -c "java -cp Orchestrator.jar Main [-b benchmark] [-i input] [-n iterations]"
 ```
 
 ## Collect results
 
 ```bash
-sudo docker cp $GCID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $GCID)/results ./results
+sudo docker cp $BENCHID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $BENCHID)/results ./results
 ```
