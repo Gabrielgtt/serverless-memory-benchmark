@@ -55,8 +55,8 @@ Generate a thumbnail of an image.
 {
     "width": 200,
     "height": 200,
-    "destPath": resized.jpg,
-    "filePath": sundown.jpeg
+    "destPath": "resized.jpg",
+    "filePath": "sundown.jpeg"
 }
 ```
 
@@ -65,9 +65,9 @@ Generate a thumbnail of an image.
 Add a watermark and generate gif of a video file.
 ```json
 {
-    "videoPath": video.mp4,
+    "videoPath": "video.mp4",
     "duration": 3,
-    "operation": extract-gif
+    "operation": "extract-gif"
 }
 ```
 
