@@ -31,3 +31,4 @@ sudo docker exec $BENCHID bash -c "java -cp Orchestrator.jar Main [-b benchmark]
 ```bash
 sudo docker cp $BENCHID:$(sudo docker inspect --format='{{.Config.WorkingDir}}' $BENCHID)/results ./results
 ```
+
