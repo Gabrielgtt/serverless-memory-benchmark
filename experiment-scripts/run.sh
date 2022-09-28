@@ -17,8 +17,6 @@ done
 CONTAINERID=$(sudo docker run -it -d $REPOSITORY:$TAG)
 CONTAINER_WD=$(sudo docker inspect --format='{{.Config.WorkingDir}}' $CONTAINERID)
 
-echo $CONTAINERID
-
 execute_benchmark() {
     exp_tag=$1
     gc_log_fp="${CONTAINER_WD}/${exp_tag}.log"
