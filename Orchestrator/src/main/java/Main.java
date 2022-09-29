@@ -3,7 +3,7 @@ import java.io.File;
 public class Main {
     public static void main(String[] args) throws Exception {
         String benchmark = "", input = "";
-        int iterations = 1;
+        int iterations = 1, batch_size = 1;
 
         String usage = "Usage:\tjava Main.java [-b benchmark] [-i input] [-n iterations]";
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
