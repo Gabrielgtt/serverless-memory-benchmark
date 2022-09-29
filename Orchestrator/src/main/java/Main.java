@@ -21,6 +21,9 @@ public class Main {
             } else if ("-n".equals(args[i])) {
                 iterations = Integer.parseInt(args[i+1]);
                 i++;
+            } else if ("-b".equals(args[i])) {
+                batch_size = Integer.parseInt(args[i+1]);
+                i++;
             } else {
                 throw new Exception("Unknown flag" + args[i] + "\n" + usage);
             }
@@ -30,25 +33,25 @@ public class Main {
 
         switch (benchmark) {
             case "sleep":
-                Orchestrator.sleep(input, iterations);
+                Orchestrator.sleep(input, iterations, batch_size);
                 break;
             case "dynamic-html":
-                Orchestrator.dynamicHTML(input,iterations);
+                Orchestrator.dynamicHTML(input,iterations, batch_size);
                 break;
             case "graph-bfs":
-                Orchestrator.graphBFS(input,iterations);
+                Orchestrator.graphBFS(input,iterations, batch_size);
                 break;
             case "thumbnailer":
-                Orchestrator.thumbnailer(input,iterations);
+                Orchestrator.thumbnailer(input,iterations, batch_size);
                 break;
             case "video-processing":
-                Orchestrator.videoProcessing(input,iterations);
+                Orchestrator.videoProcessing(input,iterations, batch_size);
                 break;
             case "fibonacci":
-                Orchestrator.fibonacci(input,iterations);
+                Orchestrator.fibonacci(input,iterations, batch_size);
                 break;
             case "factorial":
-                Orchestrator.factorial(input,iterations);
+                Orchestrator.factorial(input,iterations, batch_size);
                 break;
             default:
                 throw new Exception("Unknown benchmark\n" + usage);

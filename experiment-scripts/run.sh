@@ -66,8 +66,9 @@ do
 
     echo "Collecting results"
     collect_results $exp_tag
-
-    echo "Killing container"
-    kill_container
 done
+
+
+echo "Killing container"
+kill_container
 
