@@ -1,6 +1,6 @@
 #!/bin/bash/
 
-while getopts r:t:h:w:n:g:b:i: flag
+while getopts r:t:h:w:n:g:b:i:s: flag
 do
     case "${flag}" in
         r) REPOSITORY=${OPTARG};;
@@ -11,6 +11,7 @@ do
         g) GC=${OPTARG};;
         b) BENCHMARK=${OPTARG};;
         i) INPUT_FILE=${OPTARG};;
+        s) BATCH_SIZE=${OPTARG};;
     esac
 done
 
@@ -27,7 +28,7 @@ execute_benchmark() {
         "rm -rf ${gc_log_fp}*"
 
     sudo docker exec $CONTAINERID bash -c \
-        "java -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP"
+        "java -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE}"
 }
 
 collect_results() {

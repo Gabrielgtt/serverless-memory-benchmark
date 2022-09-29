@@ -21,7 +21,7 @@ public class Main {
             } else if ("-n".equals(args[i])) {
                 iterations = Integer.parseInt(args[i+1]);
                 i++;
-            } else if ("-b".equals(args[i])) {
+            } else if ("-s".equals(args[i])) {
                 batch_size = Integer.parseInt(args[i+1]);
                 i++;
             } else {
