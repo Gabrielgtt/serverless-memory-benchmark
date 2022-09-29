@@ -11,10 +11,10 @@ public class GraphBFS implements Benchmark {
     }
 
     public void execute(int n, int batch_size, FileWriter file, String[] args) throws Exception {
-        for (int j = 0; j < batch_size; j++) {
+        for (int j = 0; j < n; j++) {
             System.gc();
 
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < batch_size; i++) {
                 System.out.println("Execution " + i);
                 long start = System.currentTimeMillis();
                 graphbfs.Main.main(args);
