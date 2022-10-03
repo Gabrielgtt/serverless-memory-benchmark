@@ -1,6 +1,8 @@
 #!/bin/bash/
 
-while getopts r:t:h:w:n:g:b:i:s: flag
+set -x
+
+while getopts r:t:h:w:n:g:b:i:s:c:f: flag
 do
     case "${flag}" in
         r) REPOSITORY=${OPTARG};;
@@ -12,10 +14,12 @@ do
         b) BENCHMARK=${OPTARG};;
         i) INPUT_FILE=${OPTARG};;
         s) BATCH_SIZE=${OPTARG};;
+        c) CPU=${OPTARG};;
+        f) FLAGS=${OPTARG};;
     esac
 done
 
-CONTAINERID=$(sudo docker run -it -d $REPOSITORY:$TAG)
+CONTAINERID=$(sudo docker run -it -d --cpus="${CPU}" --memory="${HEAP_SIZE}" $REPOSITORY:$TAG)
 CONTAINER_WD=$(sudo docker inspect --format='{{.Config.WorkingDir}}' $CONTAINERID)
 
 execute_benchmark() {
@@ -28,7 +32,7 @@ execute_benchmark() {
         "rm -rf ${gc_log_fp}*"
 
     sudo docker exec $CONTAINERID bash -c \
-        "java -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE}"
+        "java ${FLAGS} -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE} > docker-exec.out 2> docker-exec.err"
 }
 
 collect_results() {
@@ -39,6 +43,8 @@ collect_results() {
 
     sudo docker cp ${CONTAINERID}:${CONTAINER_WD}/results ./${exp_tag}/results
     sudo docker cp ${CONTAINERID}:${gc_log_fp} ./${exp_tag}/gc.log
+    sudo docker cp ${CONTAINERID}:${CONTAINER_WD}/orchestrator.out ./${exp_tag}/orchestrator.out
+    sudo docker cp ${CONTAINERID}:${CONTAINER_WD}/orchestrator.err ./${exp_tag}/orchestrator.err
 }
 
 kill_container() {
@@ -56,13 +62,13 @@ do
     exp_tag=exp-${GC}-${BENCHMARK}-${exp}
 
     if [[ -d $exp_tag ]]
-    then 
+    then
         echo "ERROR: Directory $exp_tag already exists"
         exit 1
     fi
 
     echo_line
-    echo "Running $exp_tag" 
+    echo "Running $exp_tag"
     execute_benchmark $exp_tag
 
     echo "Collecting results"
