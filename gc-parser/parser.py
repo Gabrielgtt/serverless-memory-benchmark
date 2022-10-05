@@ -51,7 +51,7 @@ class Epsilon(Parser):
 
         alloc = run_cmds(cmds).strip().split('\n')
 
-        header = "ts_s,heap_before_mb"
+        header = "ts_s,heap_before_mb,heap_after_mb"
         lines = []
 
         for line in alloc:
@@ -65,7 +65,7 @@ class Epsilon(Parser):
 
             number = round(number)
 
-            lines.append(ts + ',' + str(number))
+            lines.append(ts + ',' + str(number) + ',' + str(number))
 
         return header, lines
 
