@@ -27,5 +27,5 @@ sudo docker run hello-world
 
 # Build the Benchmark's Docker image -----------------------
 
-sudo docker build --tag $REPOSITORY:$TAG --file ../docker/Dockerfile
+sudo docker build --tag $REPOSITORY:$TAG --file ../docker/Dockerfile .
 
