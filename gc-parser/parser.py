@@ -76,20 +76,32 @@ class G1(Parser):
         logging.info('Assuming G1GC logs')
 
     def pauses(self, log_file):
-        cmds = [
+        stw_cmds = [
                 ['cat', log_file],
-                ['grep', '\[gc[ ]*\] GC' ],
+                ['grep', 'GC([0-9]*) Pause.*[0-9\.]*ms$'],
                 ['awk', '{{print $NF}}'],
                 ['sed', 's/ms//g'],
                 ['sed', 's/,/./g']
             ]
-        pause_times = run_cmds(cmds).split('\n')
-        pause_times.pop() # Last element is always a space
+        stw_pause_times = run_cmds(stw_cmds).split('\n')
+        stw_pause_times.pop() # Last element is always a space
+
+        conc_cmds = [
+                ['cat', log_file],
+                ['grep', 'GC([0-9]*) Concurrent.*[0-9\.]*ms$'],
+                ['awk', '{{print $NF}}'],
+                ['sed', 's/ms//g'],
+                ['sed', 's/,/./g']
+            ]
+        conc_pause_times = run_cmds(conc_cmds).split('\n')
+        conc_pause_times.pop() # Last element is always a space
 
         pauses = []
 
-        for p in pause_times:
+        for p in stw_pause_times:
             pauses += ["stw,{}".format(p)]
+        for p in conc_pause_times:
+            pauses += ["conc,{}".format(p)]
        
         header = "type,pause_time_ms"
         return header, pauses
