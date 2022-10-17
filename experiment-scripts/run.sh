@@ -65,7 +65,7 @@ echo_line() {
 
 for exp in $(seq 1 $N);
 do
-        exp_tag=exp-${GC}-${BENCHMARK}-${exp}
+        exp_tag=exp-${GC}-${BENCHMARK}-${HEAP_SIZE}-${exp}
 
         if [[ -d $exp_tag ]]
         then
