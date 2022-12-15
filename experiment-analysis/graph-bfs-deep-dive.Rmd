@@ -1,0 +1,250 @@
+---
+title: "Graph-bfs analysis"
+author: "Gabriel Tavares"
+date: "10/19/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(here)
+```
+
+```{r}
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+
+```{r}
+# ADD NEW INPUTS HERE!
+experiments_info_alloc <- list(
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g2c")
+)
+
+experiments_info_gc <- list(
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g")
+)
+
+experiments_info_latency <- list(
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g2c")
+)
+```
+
+
+```{r}
+df_alloc_graphbfs <- map_df(experiments_info_alloc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>%
+    group_by(gc, heap, cores, run, benchmark) %>%
+    mutate(
+      alloc = heap_before_mb - lag(heap_after_mb, default = first(heap_before_mb)),
+      cumm_alloc = cumsum(alloc),
+      ts_s = ts_s - first(ts_s),
+      alloc_per_sec = alloc / (ts_s - lag(ts_s))
+      ) %>%
+    slice(2:n()) %>% # Remove first and last row of each group
+    slice(1:(n()-1))
+  })
+
+df_gc <- map_df(experiments_info_gc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_latency_graphbfs <- map_df(experiments_info_latency, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  })
+```
+
+
+# Graph-bfs
+
+
+```{r, fig.height=8, fig.width=12}
+df_alloc_graphbfs %>%
+  filter(heap == "2g" | gc == "Epsilon") %>%
+  plot_alloc("graph-bfs")
+```
+
+
+```{r, fig.height=8}
+df_alloc_graphbfs %>%
+  filter(benchmark == "graph-bfs" & run == 4) %>%
+  ggline(x = "ts_s", y = "alloc", color = "gc", numeric.x.axis = TRUE) + 
+  grids(linetype = "dashed") +
+  facet_wrap(heap ~ cores)
+```
+
+```{r, fig.height=5, fig.width=15}
+df_alloc_graphbfs %>%
+  filter(benchmark == "graph-bfs" & run == 5 & (cores == 2 | gc != "Epsilon")) %>%
+  filter(alloc_per_sec < 1e4) %>%
+  ggboxplot(x = "heap", y = "alloc_per_sec", color = "gc") %>%
+  ggpar(
+    ylab = "Mean Allocation (Mb/s)",
+    xlab = "Heap size (Mb)",
+    title = "Graph-bfs allocation rate"
+    ) +
+  grids(linetype = "dashed")
+```
+
+```{r}
+df_latency_graphbfs %>%
+  filter(run == 5 & batch_number == 1 & gc != "Epsilon") %>%
+  mutate(req_id = as.integer(req_id)) %>%
+  ggline(x = "req_id", y = "duration", color = "heap") +
+  facet_wrap(~ gc)
+```
+
+
+```{r, fig.width=6,fig.height=6}
+df_latency_graphbfs %>%
+  mutate(latency = end_time - init_time) %>%
+  filter(batch_number != 0 & heap != "256m") %>%
+  ggecdf(x = "latency", color = "heap", linetype = "cores") %>%
+  facet(facet.by = "gc", nrow = 2) %>%
+  ggpar(
+    xlab = "Response time (ms)",
+    ylab = "ECDF"
+  )
+```
+
+```{r, fig.height=5, fig.width=5}
+allocation_info <- df_alloc_graphbfs %>%
+  group_by(gc, heap, cores) %>%
+  mutate(
+    total_alloc_gb = sum(alloc) / 1024
+  ) %>%
+  distinct(total_alloc_gb, gc, heap, cores)
+
+allocation_info %>%
+  ggtexttable(rows = NULL, theme = ttheme("minimal"))
+  # tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
+```
+
+
+
+```{r}
+percentile_df <- df_latency_graphbfs %>%
+  filter(batch_number != 0 & (heap == "256m" | gc == "Epsilon")) %>%
+  group_by(gc) %>%
+  mutate(p90 = quantile(duration, 0.90)) %>%
+  mutate(p99 = quantile(duration, 0.99)) %>%
+  mutate(p999 = quantile(duration, 0.999)) %>%
+  distinct(p90, p99, p999, gc)
+  
+percentile_df %>%
+  ggtexttable(rows = NULL, theme = ttheme("minimal")) %>%
+  tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
+```
+
+
+```{r}
+df_latency_graphbfs %>%
+  filter(
+    batch_number != 0 &
+    heap != "256m"
+  ) %>%
+  ggboxplot(x = "gc", y = "duration", color = "heap") %>%
+  facet(facet.by = "cores", nrow = 1, panel.labs = list(cores = c("Single core", "Two cores"))) +
+  theme(axis.text.x=element_text(angle = -10, hjust = 0.5, vjust = 0.06))
+```
+
+```{r, fig.height=4, fig.width=9}
+df_latency_graphbfs %>%
+  filter(
+    batch_number != 0 &
+    (heap == "256m" | gc == "Epsilon")
+  ) %>%
+  group_by(gc) %>%
+  ggecdf(x = "duration", color = "gc") %>%
+  ggpar(ylab = "") +
+  geom_vline(data = percentile_df, aes(colour = gc, xintercept = p999)) +
+  geom_text(data = percentile_df, 
+            aes(
+              x = p999, y = c(0.25, 0.90, 0.50, 0.20),
+              label = paste(as.integer(p999)),  
+              colour = gc,
+              position = "dodge"), 
+            nudge_x = 350, show.legend = FALSE
+            )
+```
+
+
+```{r, fig.height=5, fig.width=8}
+df_latency_graphbfs %>%
+  filter(batch_number == 1 & heap != "256m") %>%
+  ggboxplot(x = "heap", y = "duration", color = "cores") %>%
+  facet(facet.by = "gc", ncol = 2) %>%
+  ggpar( 
+    title = "Latency boxplot of dynamic-html function",
+    ylab = "Response time (ms)",
+    xlab = "Heap size", x.text.angle = 20
+  ) 
+```
+
+
+```{r, fig.width=7, fig.height=4}
+df_gc %>%
+  filter(run == 10 & benchmark == "graph-bfs" & heap == "512m") %>%
+  mutate(input_line = as.integer(input_line)) %>%
+  ggplot(aes(y = pause_time_ms, x = gc, color = type)) +
+  geom_jitter() +
+  theme_minimal()
+
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html" & heap == "512m") %>%
+  ggboxplot(y = "pause_time_ms", x = "type", fill = "gc") %>%
+  ggpar(
+    xlab = "Pause type",
+    ylab = "Pause time (ms)",
+    title = "Pause time for STW and concurrent collections"
+  )
+```

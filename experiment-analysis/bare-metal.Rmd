@@ -1,0 +1,352 @@
+---
+title: "Bare metal analisys"
+author: "Gabriel Tavares"
+date: "10/19/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(here)
+```
+
+```{r}
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+
+```{r}
+# ADD NEW INPUTS HERE!
+experiments_info_alloc <- list(
+  # ======================= DynamicHTML ==================================
+  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
+  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
+  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
+  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
+  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
+  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
+  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
+  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
+  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
+  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
+  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
+  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
+  c("Epsilon", "dynamic-html", 30, "processed-alloc.csv", "bare-metal-18-10", "20g1c"),
+  c("Epsilon", "dynamic-html", 30, "processed-alloc.csv", "bare-metal-18-10", "20g2c"),
+  # ======================= GraphBFS ==================================
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g2c")
+)
+
+experiments_info_gc <- list(
+  # ======================= DynamicHTML ==================================
+  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
+  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
+  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
+  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
+  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
+  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
+  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
+  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
+  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
+  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
+  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
+  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
+  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
+  # ======================= GraphBFS ==================================
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g")
+)
+
+experiments_info_latency <- list(
+  # ======================= DynamicHTML ==================================
+  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
+  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
+  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
+  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
+  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
+  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
+  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
+  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
+  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
+  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
+  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
+  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
+  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
+  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
+  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
+  c("Epsilon", "dynamic-html", 30, "results/dynamic-html.csv", "bare-metal-18-10", "20g1c"),
+  c("Epsilon", "dynamic-html", 30, "results/dynamic-html.csv", "bare-metal-18-10", "20g2c"),
+  # ======================= GraphBFS ==================================
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
+  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g2c")
+)
+```
+
+
+```{r}
+df_alloc <- map_df(experiments_info_alloc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>%
+    group_by(gc, heap, cores, run, benchmark) %>%
+    mutate(
+      alloc = heap_before_mb - lag(heap_after_mb, default = first(heap_before_mb)),
+      cumm_alloc = cumsum(alloc),
+      ts_s = ts_s - first(ts_s),
+      alloc_per_sec = alloc / (ts_s - lag(ts_s))
+      ) %>%
+    slice(2:n()) %>% # Remove first and last row of each group
+    slice(1:(n()-1))
+  })
+
+df_gc <- map_df(experiments_info_gc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_latency <- map_df(experiments_info_latency, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  })
+```
+
+
+# Dynamic-html
+
+```{r, fig.height=8, fig.width=9}
+df_alloc %>%
+  filter(run == 5) %>%
+  ggline(x = "ts_s", y = "cumm_alloc", color = "heap", numeric.x.axis = TRUE, point.size = 0.1, size = 0.5) %>%
+  ggpar(legend.title = "Heap size") +
+  facet_wrap(benchmark ~ gc, ncol = 4)
+```
+
+```{r, fig.height=2, fig.width=7}
+n_requests <- df_latency %>%
+  group_by(benchmark) %>%
+  mutate(n_req = max(req_id) + 1) %>%
+  distinct(benchmark, n_req)
+
+allocation_info <- df_alloc %>%
+  merge(n_requests, by = "benchmark") %>%
+  group_by(gc, heap, cores, benchmark, run) %>%
+  mutate(
+    total_alloc_gb = (sum(alloc) / 1024),
+    total_alloc_per_req_gb = total_alloc_gb / n_req
+  ) %>%
+  ungroup() %>%
+  group_by(benchmark) %>%
+  mutate(
+    mean_total_alloc_gb = mean(total_alloc_gb),
+    mean_total_alloc_per_req_gb = mean(total_alloc_per_req_gb)
+  ) %>%
+  distinct(mean_total_alloc_gb, mean_total_alloc_per_req_gb, benchmark, n_req)
+
+allocation_info %>%
+  ggtexttable(rows = NULL, theme = ttheme("minimal"), cols = c("Benchmark", "#Requests per run", "Mean Total Allocation (Gb)", "Mean Total Alloc/Req (Gb)"))
+  # tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
+```
+
+Calcular outras estatísticas da alocação por request, como o desvio padrão. Plottar o boxplot da alocação por request. 
+No Epsilon, é possível cuspir logs da ocupação do Heap entre requests. Isso vai ser cuspido nos logs do GC, assim eu separo alocação por req.
+
+```{r}
+df_alloc %>%
+  filter(gc == "Epsilon" & run == 5) %>%
+  ggline(x = "ts_s", y = "cumm_alloc", color = "cores", numeric.x.axis = TRUE) %>%
+  ggpar(legend.title = "CPU cores") +
+  facet_wrap(~ benchmark) 
+```
+
+
+```{r, fig.height=9, fig.width=15}
+df_alloc %>%
+  filter(heap == "2g" | gc == "Epsilon") %>%
+  plot_alloc("dynamic-html")
+```
+
+```{r, fig.height=8, fig.width=15}
+df_alloc %>%
+  filter(gc %in% c("Shenandoah", "G1") & heap == "4g") %>%
+  plot_alloc("dynamic-html")
+```
+
+```{r, fig.height=8}
+df_alloc %>%
+  filter(benchmark == "graph-bfs" & run == 5) %>%
+  ggline(x = "ts_s", y = "alloc", color = "gc", numeric.x.axis = TRUE) + 
+  grids(linetype = "dashed") +
+  facet_wrap(heap ~ cores)
+```
+
+```{r, fig.height=8, fig.width=15}
+df_alloc %>%
+  filter(
+    run == 5 & 
+    (cores == 2 | gc != "Epsilon") &
+    (benchmark == "dynamic-html" | alloc_per_sec < 10000)
+  ) %>%
+  ggboxplot(x = "heap", y = "alloc_per_sec", color = "gc") %>%
+  ggpar(
+    ylab = "Mean Allocation (Mb/s)",
+    xlab = "Heap size (Mb)",
+    title = "Dynamic-html allocation rate"
+    ) +
+  grids(linetype = "dashed") +
+  facet_wrap(~ benchmark, ncol = 2)
+```
+
+
+```{r}
+df_latency %>%
+  filter(run == 5 & batch_number == 1 & gc == "Epsilon") %>%
+  mutate(req_id = as.integer(req_id)) %>%
+  ggline(x = "req_id", y = "duration", color = "cores")
+```
+
+
+```{r, fig.width=6,fig.height=6}
+df_latency %>%
+  mutate(latency = end_time - init_time) %>%
+  filter(batch_number != 0 & heap != "256m") %>%
+  ggecdf(x = "latency", color = "heap", linetype = "cores") %>%
+  facet(facet.by = "gc", nrow = 2) %>%
+  ggpar(
+    xlab = "Response time (ms)",
+    ylab = "ECDF"
+  )
+```
+
+
+```{r}
+percentile_df <- df_latency %>%
+  filter(batch_number != 0 & (heap == "256m" | gc == "Epsilon")) %>%
+  group_by(gc) %>%
+  mutate(p90 = quantile(duration, 0.90)) %>%
+  mutate(p99 = quantile(duration, 0.99)) %>%
+  mutate(p999 = quantile(duration, 0.999)) %>%
+  distinct(p90, p99, p999, gc)
+  
+percentile_df %>%
+  ggtexttable(rows = NULL, theme = ttheme("minimal")) %>%
+  tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
+```
+
+
+```{r,fig.height=4, fig.width=11}
+df_latency %>%
+  filter(
+    batch_number != 0 &
+    heap != "256m"
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  facet(facet.by = "cores", nrow = 1, panel.labs = list(cores = c("Single core", "Two cores"))) +
+  theme(axis.text.x=element_text(angle = -10, hjust = 0.5, vjust = 0.06)) +
+  theme_bw()
+```
+
+
+
+```{r, fig.height=4, fig.width=9}
+df_latency %>%
+  filter(
+    batch_number != 0 &
+    (heap == "256m" | gc == "Epsilon")
+  ) %>%
+  group_by(gc) %>%
+  ggecdf(x = "duration", color = "gc") %>%
+  ggpar(ylab = "") +
+  geom_vline(data = percentile_df, aes(colour = gc, xintercept = p999)) +
+  geom_text(data = percentile_df, 
+            aes(
+              x = p999, y = c(0.25, 0.90, 0.50, 0.20),
+              label = paste(as.integer(p999)),  
+              colour = gc,
+              position = "dodge"), 
+            nudge_x = 100, show.legend = FALSE
+            )
+```
+
+Verificar a frequência de alocação dessa aplicação. O gráfico acima é evidência de que o funcionamento do Serial envolve operações que competem menos com os recursos da aplicação.
+
+Criar os gráficos de alocação para melhorar o nosso caso, escrevendo o paper em cima de perfis de uso de memória, em vez de uso de memória e cpu. Por isso é bem importante mostrar os perfis de alocação em termos de frequência de alocação e quantidade de memória utilizada.
+
+
+```{r, fig.height=5, fig.width=8}
+df_latency %>%
+  filter(batch_number == 1 & heap != "256m") %>%
+  ggboxplot(x = "heap", y = "duration", color = "cores") %>%
+  facet(facet.by = "gc", ncol = 2) %>%
+  ggpar( 
+    title = "Latency boxplot of dynamic-html function",
+    ylab = "Response time (ms)",
+    xlab = "Heap size", x.text.angle = 20
+  ) 
+```
+
+
+```{r, fig.width=7, fig.height=4}
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html" & heap == "512m") %>%
+  mutate(input_line = as.integer(input_line)) %>%
+  ggplot(aes(y = pause_time_ms, x = gc, color = type)) +
+  geom_jitter() +
+  theme_minimal()
+
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html" & heap == "512m") %>%
+  ggboxplot(y = "pause_time_ms", x = "type", fill = "gc") %>%
+  ggpar(
+    xlab = "Pause type",
+    ylab = "Pause time (ms)",
+    title = "Pause time for STW and concurrent collections"
+  )
+```

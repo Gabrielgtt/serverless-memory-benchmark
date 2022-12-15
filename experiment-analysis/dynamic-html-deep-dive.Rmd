@@ -1,0 +1,108 @@
+---
+title: "Deep dive on the dynamic html benchmark"
+author: "Gabriel Tavares"
+date: "9/22/2022"
+output: html_document
+---
+
+```{r}
+library(here)
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+
+```{r}
+# ADD NEW INPUTS HERE!
+experiments_info_alloc <- list(
+  c("Shenandoah", "dynamic-html", 10, "processed-alloc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "14-10", "1g"),
+  c("Epsilon", "dynamic-html", 10, "processed-alloc.csv", "06-10", "16g"),
+  c("Serial", "dynamic-html", 10, "processed-alloc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "17-10", "512m")
+)
+
+experiments_info_gc <- list(
+  c("Shenandoah", "dynamic-html", 10, "processed-gc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "14-10", "1g"),
+  c("Serial", "dynamic-html", 10, "processed-gc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "17-10", "512m")
+)
+
+experiments_info_latency <- list(
+  c("Shenandoah", "dynamic-html", 10, "results/dynamic-html.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "14-10", "1g"),
+  c("Epsilon", "dynamic-html", 10, "results/dynamic-html.csv", "06-10", "16g"),
+  c("Serial", "dynamic-html", 10, "results/dynamic-html.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "512m")
+)
+```
+
+
+```{r}
+df_alloc <- map_df(experiments_info_alloc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_gc <- map_df(experiments_info_gc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_latency <- map_df(experiments_info_latency, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  })
+```
+
+
+
+# Dynamic-html
+
+```{r, fig.height=9, fig.width=15}
+df_alloc %>%
+  filter(gc == "G1") %>%
+  plot_alloc("dynamic-html") %>%
+  facet(facet.by = "heap", nrow = 2)
+```
+
+```{r}
+df_latency %>%
+  filter(run == 5 & batch_number == 1) %>%
+  mutate(batch_number = as.character(batch_number)) %>%
+  mutate(req_id = as.integer(req_id)) %>%
+  ggline(x = "req_id", y = "duration") %>%
+  facet(facet.by = "gc", nrow = 4, ncol = 1)
+
+df_latency %>%
+  plot_latency(1, "dynamic-html")
+```
+- Devemos rodar o Epsilon com o AlwaysPreTouch com heap topado
+- Testar uma rodada sem o docker
+- Testar com o baremetal
+  - Queremos explicar essa variação da latência, uma vez que o GC não deveria impactar no Epsilon. Possivelmente a alocação em si já faz um impacto.
+- Testar com o heap nos níveis: 256m, 512m, 1g. Em teoria o impacto do GC deve diminuir conforme a memória cresce.
+
+
+```{r}
+quantile((df_latency %>% filter(benchmark == "dynamic-html" & batch_number == 1 & gc == "G1"))$duration, c(0.5, 0.99, 1))
+quantile((df_latency %>% filter(benchmark == "dynamic-html" & batch_number == 1 & gc == "Shenandoah"))$duration, c(0.5, 0.99, 1))
+```
+
+
+```{r, fig.width=7, fig.height=4}
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html") %>%
+  mutate(input_line = as.integer(input_line)) %>%
+  ggplot(aes(y = pause_time_ms, x = gc, color = type)) +
+  geom_jitter() +
+  theme_minimal()
+
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html") %>%
+  ggboxplot(y = "pause_time_ms", x = "type", fill = "gc") %>%
+  ggpar(
+    xlab = "Pause type",
+    ylab = "Pause time (ms)",
+    title = "Pause time for STW and concurrent collections"
+  )
+```
+

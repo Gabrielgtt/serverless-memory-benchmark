@@ -27,4 +27,4 @@ Cada ciclo com 100 repetições
 
 bash parse-data.sh -r 10 -g Epsilon -p /home/moranguinho/mestrado/serverless-memory-benchmark/experiment-analysis/results/exp-04-10-v2/exp-Epsilon-dynamic-html-
 
-seq 1 10 | xargs -I XXX scp -r -i ~/.ssh/doritos.pem ubuntu@10.11.19.173:"/home/ubuntu/serverless-memory-benchmark/experiment-scripts/exp-Epsilon-dynamic-html-XXX/" ./
+seq 1 10 | xargs -I XXX scp -r -i ~/.ssh/lsd.pem ubuntu@10.11.19.89:"/home/ubuntu/serverless-memory-benchmark/experiment-scripts/exp-Epsilon-dynamic-html-XXX/" ./

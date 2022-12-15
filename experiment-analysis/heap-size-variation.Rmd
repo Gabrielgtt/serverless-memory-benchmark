@@ -1,0 +1,126 @@
+---
+title: "Heap size variation"
+author: "Gabriel Tavares"
+date: "10/17/2022"
+output: html_document
+---
+
+```{r}
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+
+```{r}
+# ADD NEW INPUTS HERE!
+experiments_info_alloc <- list(
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "14-10", "1g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-alloc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "17-10", "512m"),
+  c("Shenandoah", "dynamic-html", 10, "processed-alloc.csv", "17-10", "512m"),
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "17-10", "2g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-alloc.csv", "17-10", "2g"),
+  c("G1", "dynamic-html", 10, "processed-alloc.csv", "17-10", "4g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-alloc.csv", "17-10", "4g"),
+  c("Epsilon", "dynamic-html", 10, "processed-alloc.csv", "06-10", "16g")
+)
+
+experiments_info_gc <- list(
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "14-10", "1g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-gc.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "17-10", "512m"),
+  c("Shenandoah", "dynamic-html", 10, "processed-gc.csv", "17-10", "512m"),
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "17-10", "2g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-gc.csv", "17-10", "2g"),
+  c("G1", "dynamic-html", 10, "processed-gc.csv", "17-10", "4g"),
+  c("Shenandoah", "dynamic-html", 10, "processed-gc.csv", "17-10", "4g")
+)
+
+experiments_info_latency <- list(
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "14-10", "1g"),
+  c("Shenandoah", "dynamic-html", 10, "results/dynamic-html.csv", "14-10", "1g"),
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "512m"),
+  c("Shenandoah", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "512m"),
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "2g"),
+  c("Shenandoah", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "2g"),
+  c("G1", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "4g"),
+  c("Shenandoah", "dynamic-html", 10, "results/dynamic-html.csv", "17-10", "4g"),
+  c("Epsilon", "dynamic-html", 10, "results/dynamic-html.csv", "06-10", "16g")
+)
+```
+
+
+```{r}
+df_alloc <- map_df(experiments_info_alloc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_gc <- map_df(experiments_info_gc, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+
+df_latency <- map_df(experiments_info_latency, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  })
+```
+
+
+# Dynamic-html
+
+```{r, fig.height=9, fig.width=15}
+df_alloc %>%
+  filter(gc == "Shenandoah") %>%
+  plot_alloc("dynamic-html") %>%
+  facet(facet.by = "heap", nrow = 4)
+```
+
+```{r}
+df_latency %>%
+  filter(run == 5 & batch_number == 1 & gc == "G1") %>%
+  mutate(batch_number = as.character(batch_number)) %>%
+  mutate(req_id = as.integer(req_id)) %>%
+  ggline(x = "req_id", y = "duration") %>%
+  facet(facet.by = "heap", nrow = 4)
+```
+
+
+```{r}
+df_latency %>%
+  filter(gc == "G1" & batch_number == 1) %>%
+  ggecdf(x = "duration", color = "heap") %>%
+  ggpar(
+    xlab = "Response time (ms)",
+    ylab = "ECDF"
+  )
+```
+
+
+```{r}
+df_latency %>%
+  filter(gc != "Epsilon" & batch_number == 1) %>%
+  ggboxplot(x = "heap", y = "duration") %>%
+  facet(facet.by = "gc", nrow = 4) %>%
+  ggpar( 
+    ylab = "Response time (ms)",
+    xlab = "GC", x.text.angle = 20
+  ) 
+```
+
+
+```{r, fig.width=7, fig.height=4}
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html") %>%
+  mutate(input_line = as.integer(input_line)) %>%
+  ggplot(aes(y = pause_time_ms, x = gc, color = type)) +
+  geom_jitter() +
+  theme_minimal()
+
+df_gc %>%
+  filter(run == 5 & benchmark == "dynamic-html") %>%
+  ggboxplot(y = "pause_time_ms", x = "type", fill = "gc") %>%
+  ggpar(
+    xlab = "Pause type",
+    ylab = "Pause time (ms)",
+    title = "Pause time for STW and concurrent collections"
+  )
+```
