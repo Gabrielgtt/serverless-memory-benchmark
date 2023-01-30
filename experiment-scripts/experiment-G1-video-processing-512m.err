@@ -1,0 +1,433 @@
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ REPOSITORY=gc
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ TAG=latest
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ HEAP_SIZE=512m
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ WARMUP=1
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ N=1
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ GC=G1
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ BENCHMARK=video-processing
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ INPUT_FILE=/home/moranguinho/mestrado/serverless-memory-benchmark/inputs/input-video-processing.json
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ BATCH_SIZE=10
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ case "${flag}" in
++ CPU=2.0
++ getopts r:t:h:w:n:g:b:i:s:c:f: flag
++ echo 'CAREFUL! We are using hard-coded 21g docker container memory!!'
+++ sudo docker run -it -d --cpus=2.0 --memory=21g gc:latest
++ CONTAINERID=1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42
++ '[' 0 -eq 0 ']'
++ echo OK
+++ sudo docker inspect '--format={{.Config.WorkingDir}}' 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42
++ CONTAINER_WD=/serverless-memory-benchmark/Orchestrator
+++ seq 1 1
++ for exp in $(seq 1 $N)
++ trunc_cpu=2c
++ exp_tag=exp-G1-video-processing-512m2c-1
++ [[ -d exp-G1-video-processing-512m2c-1 ]]
++ echo_line
++++ tput cols
+++ seq 1 183
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ for i in $(seq 1 $(tput cols))
++ echo -n =
++ echo ''
++ execute_benchmark exp-G1-video-processing-512m2c-1
++ echo 'Running exp-G1-video-processing-512m2c-1'
++ exp_tag=exp-G1-video-processing-512m2c-1
++ gc_log_fp=/serverless-memory-benchmark/Orchestrator/exp-G1-video-processing-512m2c-1.log
++ sudo docker cp /home/moranguinho/mestrado/serverless-memory-benchmark/inputs/input-video-processing.json 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42:/serverless-memory-benchmark/Orchestrator/input.json
++ sudo docker exec 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42 bash -c 'rm -rf /serverless-memory-benchmark/Orchestrator/exp-G1-video-processing-512m2c-1.log*'
++ sudo docker exec 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42 bash -c 'java  -XX:+UseG1GC -Xlog:gc:file=/serverless-memory-benchmark/Orchestrator/exp-G1-video-processing-512m2c-1.log:uptime,tags,level:filecount=1,filesize=6g -Xms512m -Xmx512m -cp Orchestrator.jar Main -b video-processing -i input.json -n 1 -s 10 > orchestrator.out 2> orchestrator.err'
++ collect_results exp-G1-video-processing-512m2c-1
++ echo 'Collecting results'
++ exp_tag=exp-G1-video-processing-512m2c-1
++ gc_log_fp=/serverless-memory-benchmark/Orchestrator/exp-G1-video-processing-512m2c-1.log
++ mkdir ./exp-G1-video-processing-512m2c-1/
++ sudo docker cp 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42:/serverless-memory-benchmark/Orchestrator/results ./exp-G1-video-processing-512m2c-1/results
++ sudo docker cp 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42:/serverless-memory-benchmark/Orchestrator/exp-G1-video-processing-512m2c-1.log ./exp-G1-video-processing-512m2c-1/gc.log
++ sudo docker cp 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42:/serverless-memory-benchmark/Orchestrator/orchestrator.out ./exp-G1-video-processing-512m2c-1/orchestrator.out
++ sudo docker cp 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42:/serverless-memory-benchmark/Orchestrator/orchestrator.err ./exp-G1-video-processing-512m2c-1/orchestrator.err
++ kill_container
++ echo 'Killing container'
++ sudo docker kill 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42
++ sudo docker rm 1ff99fabcdc8302eb7fc9ea1f42bb40959e92d31db8b2ee99799f4e04886bd42

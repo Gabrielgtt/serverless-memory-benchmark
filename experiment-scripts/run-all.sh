@@ -2,18 +2,18 @@
 
 # set -x
 
-INPUT_WD="/home/gabriel.tavares/serverless-memory-benchmark/inputs/"
+INPUT_WD="/home/moranguinho/mestrado/serverless-memory-benchmark/inputs/"
 
 REPOSITORY=gc
 TAG=latest
-HEAP_SIZES=("256m" "512m" "1g" "2g" "4g")
-WARMUP=3
-N=20
-GCS=("G1" "Serial" "Shenandoah")
-BENCHMARKS=("dynamic-html")
-INPUT_FILES=("input-dynamic-html-100000.json")
-BATCH_SIZE=100
-CPUS=("1.0" "1.0" "1.0" "2.0" "2.0")
+HEAP_SIZES=("512m")
+WARMUP=1
+N=1
+GCS=("G1")
+BENCHMARKS=("video-processing")
+INPUT_FILES=("input-video-processing.json")
+BATCH_SIZE=10
+CPUS=("2.0")
 FLAGS=""
 
 for heap_index in ${!HEAP_SIZES[@]}; do
