@@ -1,7 +1,7 @@
 #!/bin/bash
 
-REPOSITORY=$1
-TAG=$2
+REPOSITORY=gc
+TAG=latest
 
 # Install Docker -------------------------------------------
 

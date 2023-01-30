@@ -19,10 +19,17 @@ do
         esac
 done
 
-echo $CPU
-echo $FLAGS
 
-CONTAINERID=$(sudo docker run -it -d --cpus="${CPU}" --memory="${HEAP_SIZE}" $REPOSITORY:$TAG)
+echo "CAREFUL! We are using hard-coded 21g docker container memory!!"
+CONTAINERID=$(sudo docker run -it -d --cpus="${CPU}" --memory="21g" $REPOSITORY:$TAG)
+
+if [ $? -eq 0 ]; then
+        echo "OK"
+else
+        echo "Error while running docker run. See .err file"
+        exit $?
+fi
+
 CONTAINER_WD=$(sudo docker inspect --format='{{.Config.WorkingDir}}' $CONTAINERID)
 
 execute_benchmark() {
@@ -65,7 +72,8 @@ echo_line() {
 
 for exp in $(seq 1 $N);
 do
-        exp_tag=exp-${GC}-${BENCHMARK}-${HEAP_SIZE}-${exp}
+        trunc_cpu="${CPU/\.*/}c"
+        exp_tag=exp-${GC}-${BENCHMARK}-${HEAP_SIZE}${trunc_cpu}-${exp}
 
         if [[ -d $exp_tag ]]
         then
