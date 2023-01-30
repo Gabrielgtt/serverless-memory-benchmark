@@ -1,8 +1,0 @@
-{
-  "user": "testname",
-  "lengths": {
-    "test": 10,
-    "small": 1000,
-    "large": 100000
-  }
-}

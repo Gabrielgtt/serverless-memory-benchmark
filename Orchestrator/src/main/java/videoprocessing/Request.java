@@ -2,12 +2,12 @@ package videoprocessing;
 
 public class Request {
     int duration;
-    String videoPath;
+    String videopath;
     String op;
 
-    public Request(String videoPath, int duration, String op) {
+    public Request(String videopath, int duration, String op) {
         this.duration = duration;
-        this.videoPath = videoPath;
+        this.videopath = videopath;
         this.op = op;
     }
 }

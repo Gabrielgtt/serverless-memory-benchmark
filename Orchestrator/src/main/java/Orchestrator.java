@@ -73,9 +73,9 @@ public class Orchestrator {
         JSONObject jsonObject = readInput(input);
 
         Long duration = (Long) jsonObject.get("duration");
-        String videoPath = (String) jsonObject.get("videoPath");
+        String dirpath = (String) jsonObject.get("dirpath");
         String operation = (String) jsonObject.get("operation");
-        String[] args = new String[]{"-v", videoPath, "-d", String.valueOf(duration), "-o", operation};
+        String[] args = new String[]{"-v", dirpath, "-d", String.valueOf(duration), "-o", operation};
 
         b.execute(n, batch_size, file, args);
 

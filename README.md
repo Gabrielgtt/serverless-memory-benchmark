@@ -65,7 +65,7 @@ Generate a thumbnail of an image.
 Add a watermark and generate gif of a video file.
 ```json
 {
-    "videoPath": "video.mp4",
+    "dirpath": "videos/",
     "duration": 3,
     "operation": "extract-gif"
 }
