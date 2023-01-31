@@ -2,6 +2,8 @@
 
 set -x
 
+DATE_TODAY=$(date +'%d-%m')
+
 while getopts r:t:h:w:n:g:b:i:s:c:f: flag
 do
         case "${flag}" in
@@ -19,14 +21,23 @@ do
         esac
 done
 
+read -r -d '' EXP_DESCRITION << EOM
+    Heap size = $HEAP_SIZE\nWarmup runs = $WARMUP\nNumber of repetitions = $N\nGc = $GC\nBenchmark (function name) = $BENCHMARK\nInput file = $INPUT_FILE\nBatch size = $BATCH_SIZE\nNumber of CPU cores = $CPU\nJVM Flags = $FLAGS
+EOM
+
+bash discord-bot.sh -m "!! EXPERIMENT STARTING !!" -t "exp-$DATE_TODAY: $(date)" -d "$EXP_DESCRITION" -s ok
 
 echo "CAREFUL! We are using hard-coded 21g docker container memory!!"
 CONTAINERID=$(sudo docker run -it -d --cpus="${CPU}" --memory="21g" $REPOSITORY:$TAG)
 
+
 if [ $? -eq 0 ]; then
         echo "OK"
+        bash discord-bot.sh -m "Container created" -t "exp-$DATE_TODAY" -d "Começamos bem!" -s ok
 else
-        echo "Error while running docker run. See .err file"
+        ERROR_MSG="Error while running docker run. See .err file"
+        bash discord-bot.sh -m "Container failed" -t "exp-$DATE_TODAY" -d "$ERROR_MSG" -s error
+        echo $ERROR_MSG
         exit $?
 fi
 
@@ -44,7 +55,7 @@ execute_benchmark() {
 
         sudo docker exec $CONTAINERID bash -c \
                 "java ${FLAGS} -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE} > orchestrator.out 2> orchestrator.err"
-        }
+}
 
 collect_results() {
         echo "Collecting results"
@@ -60,15 +71,23 @@ collect_results() {
 }
 
 kill_container() {
-        echo "Killing container"
-        sudo docker kill $CONTAINERID
-        sudo docker rm $CONTAINERID
+    echo "Killing container"
+    sudo docker kill $CONTAINERID
+    sudo docker rm $CONTAINERID
+}
+
+compress_output() {
+    trunc_cpu="${CPU/\.*/}c"
+    exp_tag=exp-${GC}-${BENCHMARK}-${HEAP_SIZE}${trunc_cpu}
+    zip_fp=exp-$DATE_TODAY.zip
+    zip -r $zip_fp ${exp_tag}*
 }
 
 echo_line() {
         for i in $(seq 1 $(tput cols)); do echo -n '='; done
         echo ""
 }
+
 
 for exp in $(seq 1 $N);
 do
@@ -77,7 +96,9 @@ do
 
         if [[ -d $exp_tag ]]
         then
-                echo "ERROR: Directory $exp_tag already exists"
+                ERROR_MSG="Directory $exp_tag already exists"
+                echo $ERROR_MSG
+                bash discord-bot.sh -m "Experiment stopped:" -t "exp-$DATE_TODAY" -d "$ERROR_MSG" -s error
                 kill_container
                 exit 1
         fi
@@ -88,6 +109,9 @@ do
         collect_results $exp_tag
 done
 
+compress_output
+
+bash discord-bot.sh -m "Experiment finished!" -t "exp-$DATE_TODAY" -d "Tudo certo pelo visto!" -s ok
 
 kill_container
 
