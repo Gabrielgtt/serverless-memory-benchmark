@@ -23,7 +23,7 @@ JVM_FLAGS=""
 
 if [ $GC == "Epsilon" ] 
 then
-    JVM_FLAGS="-f -XX:+AlwaysPreTouch -XX:+UnlockExperimentalVMOptions"
+    JVM_FLAGS="-XX:+AlwaysPreTouch -XX:+UnlockExperimentalVMOptions"
 fi
 
 read -r -d '' EXP_DESCRITION << EOM
