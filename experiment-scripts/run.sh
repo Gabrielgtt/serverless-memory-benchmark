@@ -2,9 +2,7 @@
 
 set -x
 
-DATE_TODAY=$(date +'%d-%m')
-
-while getopts r:t:h:w:n:g:b:i:s:c:f: flag
+while getopts r:t:h:w:n:g:b:i:s:c: flag
 do
         case "${flag}" in
                 r) REPOSITORY=${OPTARG};;
@@ -17,12 +15,19 @@ do
                 i) INPUT_FILE=${OPTARG};;
                 s) BATCH_SIZE=${OPTARG};;
                 c) CPU=${OPTARG};;
-                f) FLAGS=${OPTARG};;
         esac
 done
 
+DATE_TODAY=$(date +'%d-%m')
+JVM_FLAGS=""
+
+if [ $GC == "Epsilon" ] 
+then
+    JVM_FLAGS="-f -XX:+AlwaysPreTouch -XX:+UnlockExperimentalVMOptions"
+fi
+
 read -r -d '' EXP_DESCRITION << EOM
-    Heap size = $HEAP_SIZE\nWarmup runs = $WARMUP\nNumber of repetitions = $N\nGc = $GC\nBenchmark (function name) = $BENCHMARK\nInput file = $INPUT_FILE\nBatch size = $BATCH_SIZE\nNumber of CPU cores = $CPU\nJVM Flags = $FLAGS
+    Heap size = $HEAP_SIZE\nWarmup runs = $WARMUP\nNumber of repetitions = $N\nGc = $GC\nBenchmark (function name) = $BENCHMARK\nInput file = $INPUT_FILE\nBatch size = $BATCH_SIZE\nNumber of CPU cores = $CPU\nJVM Flags = $JVM_FLAGS
 EOM
 
 bash discord-bot.sh -m "!! EXPERIMENT STARTING !!" -t "exp-$DATE_TODAY: $(date)" -d "$EXP_DESCRITION" -s ok
@@ -54,7 +59,7 @@ execute_benchmark() {
                 "rm -rf ${gc_log_fp}*"
 
         sudo docker exec $CONTAINERID bash -c \
-                "java ${FLAGS} -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE} > orchestrator.out 2> orchestrator.err"
+                "java ${JVM_FLAGS} -XX:+Use${GC}GC -Xlog:gc:file=${gc_log_fp}:uptime,tags,level:filecount=1,filesize=6g -Xms${HEAP_SIZE} -Xmx${HEAP_SIZE} -cp Orchestrator.jar Main -b $BENCHMARK -i input.json -n $WARMUP -s ${BATCH_SIZE} > orchestrator.out 2> orchestrator.err"
 }
 
 collect_results() {
