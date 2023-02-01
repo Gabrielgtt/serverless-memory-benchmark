@@ -32,13 +32,13 @@ public class VideoProcessing implements Benchmark {
                 System.out.println("Execution " + i);
                 args[1] = files[i % nfiles];
                 long free_before = rt.freeMemory();
-                long start = System.currentTimeMillis();
+                long start = System.nanoTime();
 
                 videoprocessing.Main.main(args);
 
                 long free_after = rt.freeMemory();
                 long allocated = (free_before - free_after);
-                long end = System.currentTimeMillis();
+                long end = System.nanoTime();
                 long duration = end - start;
 
                 file.write(String.format("%s,%s,%s,%s,%s,%s\n", this.getName(), i, start, end, duration, allocated));

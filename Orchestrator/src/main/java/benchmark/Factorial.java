@@ -19,13 +19,13 @@ public class Factorial implements Benchmark {
             for (int i = 0; i < batch_size; i++) {
                 System.out.println("Execution " + i);
                 long free_before = rt.freeMemory();
-                long start = System.currentTimeMillis();
+                long start = System.nanoTime();
 
                 factorial.Main.main(args);
 
                 long free_after = rt.freeMemory();
                 long allocated = (free_before - free_after);
-                long end = System.currentTimeMillis();
+                long end = System.nanoTime();
                 long duration = end - start;
 
                 file.write(String.format("%s,%s,%s,%s,%s,%s\n", this.getName(), i, start, end, duration, allocated));
