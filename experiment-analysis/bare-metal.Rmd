@@ -7,9 +7,13 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(patchwork)
+library(gt)
+library(boot)
 library(ggplot2)
 library(ggpubr)
 library(here)
+library(broom)
 ```
 
 ```{r}
@@ -20,118 +24,38 @@ source(here("benchmark-plots.R"))
 
 ```{r}
 # ADD NEW INPUTS HERE!
-experiments_info_alloc <- list(
-  # ======================= DynamicHTML ==================================
-  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
-  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
-  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
-  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
-  c("Serial", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
-  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
-  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
-  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "256m"),
-  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "512m"),
-  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "1g"),
-  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "2g"),
-  c("G1", "dynamic-html", 20, "processed-alloc.csv", "bare-metal-18-10", "4g"),
-  c("Epsilon", "dynamic-html", 30, "processed-alloc.csv", "bare-metal-18-10", "20g1c"),
-  c("Epsilon", "dynamic-html", 30, "processed-alloc.csv", "bare-metal-18-10", "20g2c"),
-  # ======================= GraphBFS ==================================
-  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
-  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
-  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
-  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
-  c("Serial", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
-  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
-  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
-  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "256m"),
-  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "512m"),
-  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "1g"),
-  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "2g"),
-  c("G1", "graph-bfs", 20, "processed-alloc.csv", "24-11", "4g"),
-  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g1c"),
-  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "24-11", "20g2c")
-)
 
-experiments_info_gc <- list(
-  # ======================= DynamicHTML ==================================
-  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
-  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
-  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
-  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
-  c("Serial", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
-  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
-  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
-  c("Shenandoah", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
-  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "256m"),
-  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "512m"),
-  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "1g"),
-  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "2g"),
-  c("G1", "dynamic-html", 20, "processed-gc.csv", "bare-metal-18-10", "4g"),
-  # ======================= GraphBFS ==================================
-  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
-  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
-  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
-  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
-  c("Serial", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
-  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
-  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
-  c("Shenandoah", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g"),
-  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "256m"),
-  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "512m"),
-  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "1g"),
-  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "2g"),
-  c("G1", "graph-bfs", 20, "processed-gc.csv", "24-11", "4g")
-)
+all_gcs <- c("Serial", "Shenandoah", "G1", "Epsilon")
+all_heap_sizes <- c("256m1c", "512m1c", "1g1c", "2g2c", "4g2c", "20g1c", "20g2c")
+all_functions <- c("graph-bfs", "fibonacci", "factorial", "dynamic-html", "video-processing", "thumbnailer")
+day <- "01-02"
+n_repetions <- 20
+file_name <- "processed-alloc.csv"
 
-experiments_info_latency <- list(
-  # ======================= DynamicHTML ==================================
-  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
-  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
-  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
-  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
-  c("Serial", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
-  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
-  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
-  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
-  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
-  c("Shenandoah", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
-  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "256m"),
-  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "512m"),
-  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "1g"),
-  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "2g"),
-  c("G1", "dynamic-html", 20, "results/dynamic-html.csv", "bare-metal-18-10", "4g"),
-  c("Epsilon", "dynamic-html", 30, "results/dynamic-html.csv", "bare-metal-18-10", "20g1c"),
-  c("Epsilon", "dynamic-html", 30, "results/dynamic-html.csv", "bare-metal-18-10", "20g2c"),
-  # ======================= GraphBFS ==================================
-  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
-  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
-  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
-  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
-  c("Serial", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
-  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
-  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
-  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
-  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
-  c("Shenandoah", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
-  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "256m"),
-  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "512m"),
-  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "1g"),
-  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "2g"),
-  c("G1", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "4g"),
-  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g1c"),
-  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "24-11", "20g2c")
-)
+experiments_info_alloc <- list()
+experiments_info_latency <- list()
+experiments_info_gc <- list()
+
+for (gc in all_gcs) {
+  for (hs in all_heap_sizes) {
+    for (fu in all_functions) {
+      index <- length(experiments_info_alloc) + 1
+      
+      if (!xor(gc != "Epsilon", hs %in% c("20g1c", "20g2c"))) {
+        next
+      } 
+      
+      line_alloc <- c(gc, fu, n_repetions, "processed-alloc.csv", day, hs)
+      experiments_info_alloc[[index]] <- line_alloc
+      
+      line_latency <- c(gc, fu, n_repetions, paste("results/", fu, ".csv", sep = ""), day, hs)
+      experiments_info_latency[[index]] <- line_latency
+      
+      line_gc <- c(gc, fu, n_repetions, "processed-gc.csv", day, hs)
+      experiments_info_gc[[index]] <- line_gc
+    }
+  }
+}
 ```
 
 
@@ -154,199 +78,239 @@ df_gc <- map_df(experiments_info_gc, function(x) {
   })
 
 df_latency <- map_df(experiments_info_latency, function(x) { 
-  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% 
+    add_batch_number() %>%
+    mutate(cores = case_when(cores == 1 ~ "single-core", cores == 2 ~ "dual-core")) %>%
+    mutate(cores = factor(cores, levels = c("single-core", "dual-core")))
   })
 ```
 
+# Heavy-slow
 
-# Dynamic-html
+In this section we analyze the latency for Heavy-slow functions, like graph-bfs.
 
-```{r, fig.height=8, fig.width=9}
-df_alloc %>%
-  filter(run == 5) %>%
-  ggline(x = "ts_s", y = "cumm_alloc", color = "heap", numeric.x.axis = TRUE, point.size = 0.1, size = 0.5) %>%
-  ggpar(legend.title = "Heap size") +
-  facet_wrap(benchmark ~ gc, ncol = 4)
-```
-
-```{r, fig.height=2, fig.width=7}
-n_requests <- df_latency %>%
-  group_by(benchmark) %>%
-  mutate(n_req = max(req_id) + 1) %>%
-  distinct(benchmark, n_req)
-
-allocation_info <- df_alloc %>%
-  merge(n_requests, by = "benchmark") %>%
-  group_by(gc, heap, cores, benchmark, run) %>%
-  mutate(
-    total_alloc_gb = (sum(alloc) / 1024),
-    total_alloc_per_req_gb = total_alloc_gb / n_req
-  ) %>%
-  ungroup() %>%
-  group_by(benchmark) %>%
-  mutate(
-    mean_total_alloc_gb = mean(total_alloc_gb),
-    mean_total_alloc_per_req_gb = mean(total_alloc_per_req_gb)
-  ) %>%
-  distinct(mean_total_alloc_gb, mean_total_alloc_per_req_gb, benchmark, n_req)
-
-allocation_info %>%
-  ggtexttable(rows = NULL, theme = ttheme("minimal"), cols = c("Benchmark", "#Requests per run", "Mean Total Allocation (Gb)", "Mean Total Alloc/Req (Gb)"))
-  # tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
-```
-
-Calcular outras estatísticas da alocação por request, como o desvio padrão. Plottar o boxplot da alocação por request. 
-No Epsilon, é possível cuspir logs da ocupação do Heap entre requests. Isso vai ser cuspido nos logs do GC, assim eu separo alocação por req.
-
-```{r}
-df_alloc %>%
-  filter(gc == "Epsilon" & run == 5) %>%
-  ggline(x = "ts_s", y = "cumm_alloc", color = "cores", numeric.x.axis = TRUE) %>%
-  ggpar(legend.title = "CPU cores") +
-  facet_wrap(~ benchmark) 
-```
-
-
-```{r, fig.height=9, fig.width=15}
-df_alloc %>%
-  filter(heap == "2g" | gc == "Epsilon") %>%
-  plot_alloc("dynamic-html")
-```
-
-```{r, fig.height=8, fig.width=15}
-df_alloc %>%
-  filter(gc %in% c("Shenandoah", "G1") & heap == "4g") %>%
-  plot_alloc("dynamic-html")
-```
-
-```{r, fig.height=8}
-df_alloc %>%
-  filter(benchmark == "graph-bfs" & run == 5) %>%
-  ggline(x = "ts_s", y = "alloc", color = "gc", numeric.x.axis = TRUE) + 
-  grids(linetype = "dashed") +
-  facet_wrap(heap ~ cores)
-```
-
-```{r, fig.height=8, fig.width=15}
-df_alloc %>%
+```{r, fig.width=10,fig.height=4}
+df_heavyslow <- df_latency %>%
   filter(
-    run == 5 & 
-    (cores == 2 | gc != "Epsilon") &
-    (benchmark == "dynamic-html" | alloc_per_sec < 10000)
+    batch_number != 0,
+    benchmark %in% c("graph-bfs"),
+    heap %in% c("256m1c", "20g1c")
   ) %>%
-  ggboxplot(x = "heap", y = "alloc_per_sec", color = "gc") %>%
-  ggpar(
-    ylab = "Mean Allocation (Mb/s)",
-    xlab = "Heap size (Mb)",
-    title = "Dynamic-html allocation rate"
-    ) +
-  grids(linetype = "dashed") +
-  facet_wrap(~ benchmark, ncol = 2)
-```
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  group_by(heap, gc) %>%
+  mutate(
+    p99_lat = quantile(duration, .99),
+    median_lat = quantile(duration, .5)
+  ) %>% 
+  ungroup() %>%
+  mutate(
+    rel_median_lat = median_lat / min(median_lat),
+    rel_p99_lat = p99_lat / min(p99_lat)
+  )
 
-
-```{r}
-df_latency %>%
-  filter(run == 5 & batch_number == 1 & gc == "Epsilon") %>%
-  mutate(req_id = as.integer(req_id)) %>%
-  ggline(x = "req_id", y = "duration", color = "cores")
-```
-
-
-```{r, fig.width=6,fig.height=6}
-df_latency %>%
-  mutate(latency = end_time - init_time) %>%
-  filter(batch_number != 0 & heap != "256m") %>%
-  ggecdf(x = "latency", color = "heap", linetype = "cores") %>%
-  facet(facet.by = "gc", nrow = 2) %>%
+ecdf_heavyslow_256m <- df_heavyslow %>%
+  ggecdf(x = "duration", color = "gc") %>%
   ggpar(
     xlab = "Response time (ms)",
-    ylab = "ECDF"
+    ylab = "ECDF",
+    xticks.by = 1000
+  ) +
+  grids(linetype = "dashed") +
+  geom_vline(data = df_heavyslow, linetype = "dotted", size = 0.8, show.legend = FALSE, aes(colour = gc, xintercept = p99_lat)) +
+  geom_vline(data = df_heavyslow, linetype = "dashed", size = 0.5, show.legend = FALSE, aes(colour = gc, xintercept = median_lat)) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = 150, 
+    size = 6,
+    show_guide = FALSE,
+    aes(x = p99_lat, y = 0.2, label = "99th", angle = -90, color = gc)
+  ) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = -150,
+    size = 6,
+    show_guide = FALSE,
+    aes(x = median_lat, y = 0.8, label = "Median", angle = -90, color = gc)
   )
+
+
+table_heavyslow_256m <- df_heavyslow %>%
+      distinct(rel_p99_lat, rel_median_lat, gc) %>%
+      arrange(rel_p99_lat) %>%
+      mutate(
+        rel_p99_lat = paste(format(round(rel_p99_lat, 2), nsmall = 2), "x", sep = ""),
+        rel_median_lat = paste(format(round(rel_median_lat, 2), nsmall = 2), "x", sep = "")
+      ) %>%
+      select(gc, rel_median_lat, rel_p99_lat) %>%
+      ggtexttable(rows = NULL, theme = ttheme(tbody.style = tbody_style(hjust=1, x=0.9)), cols = c("GC", "Median", "99th")) 
+
+
+ggarrange(ecdf_heavyslow_256m, table_heavyslow_256m, nrow = 1, widths = c(3, 1))
 ```
+
+```{r,fig.height=5, fig.width=8}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark %in% c("graph-bfs"),
+    gc != "Epsilon"
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggpar (
+    xlab = "Heap size / CPU cores",
+    ylab = "Latency (ms)"
+  ) +
+  grids(linetype = "dashed")
+```
+
+
+```{r, fig.width=7,fig.height=4}
+df_latency %>% plot_ecdf_latency("graph-bfs", nticks = 50)
+```
+
+
+
+# Heavy-fast
+
+Functions like the Dynamic-html.
+
+```{r, fig.width=7,fig.height=4}
+df_latency %>% plot_ecdf_latency("dynamic-html", nticks = )
+```
+
+```{r}
+calculate_median <- function(df) {
+  smedian <- \(d, i, ...) d[i,] %>% pull(duration) %>% median()
+  bdf <- boot(data = df, statistic = smedian, R = 4000)
+  tidy(bdf, conf.level = .95, conf.int = TRUE) %>% mutate(heap = df$heap[1], gc = df$gc[1], cores = df$cores[1])
+}
+
+calculate_quantile <- function(df, p = .99) {
+  squantile <- \(d, i, ...) d[i,] %>% pull(duration) %>% quantile(p)
+  bdf <- boot(data = df, statistic = squantile, R = 4000)
+  tidy(bdf, conf.level = .95, conf.int = TRUE) %>% mutate(heap = df$heap[1], gc = df$gc[1], cores = df$cores[1])
+}
+
+plot_latency_ic <- function(df) {
+  df %>%
+    ggplot(aes(y = statistic, x = heap, color = gc)) +
+    geom_linerange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = .5)) +
+    geom_point(position = position_dodge(width = .5)) +
+    theme_minimal() +
+    facet_wrap(. ~ cores, scales = "free_x")
+}
+
+grouped_dh_latency <- df_latency %>%
+  filter(batch_number != 0, benchmark == "dynamic-html") %>%
+  mutate(duration = duration / 1e6) %>%
+  group_by(gc, heap) %>%
+  group_split()
+
+
+dh_median_ic <- grouped_dh_latency %>% map_df(~calculate_median(.))
+dh_p95_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .95))
+dh_p99_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .99))
+```
+
+```{r, fig.height=4, fig.width=8}
+dh_p99_ic %>% plot_latency_ic()
+```
+
+```{r, fig.height=4, fig.width=8}
+dh_p95_ic %>% plot_latency_ic()
+```
+
+
+```{r, fig.height=4, fig.width=8}
+dh_median_ic %>% plot_latency_ic()
+```
+
+
+
+
+```{r,fig.height=5, fig.width=8}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "dynamic-html",
+    heap %in% all_heap_sizes
+    # heap %in% c("256m1c", "512m1c", "1g1c", "20g1c")
+    # heap %in% c("2g2c", "4g2c", "20g2c")
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggpar (
+    xlab = "Heap size / CPU cores",
+    ylab = "Latency (ms)"
+  ) %>%
+  facet(facet.by = "cores", scales = "free_x") +
+  grids(linetype = "dashed") 
+```
+
+
+```{r, fig.width=8,fig.height=6}
+df_latency %>%
+  plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("2g2c", "20g2c"), gcs = all_gcs, nticks = 5)
+
+df_latency %>%
+  plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("4g2c", "20g2c"), gcs = all_gcs, nticks = 5)
+```
+
+# Light-fast
+
+```{r, fig.width=8,fig.height=6}
+df_latency %>%
+  plot_ecdf_latency(b = "thumbnailer", c = "gc", heaps = c("2g2c", "20g2c"), gcs = all_gcs, nticks = 5)
+```
+
+
+
+
+# Minimal
 
 
 ```{r}
-percentile_df <- df_latency %>%
-  filter(batch_number != 0 & (heap == "256m" | gc == "Epsilon")) %>%
-  group_by(gc) %>%
-  mutate(p90 = quantile(duration, 0.90)) %>%
-  mutate(p99 = quantile(duration, 0.99)) %>%
-  mutate(p999 = quantile(duration, 0.999)) %>%
-  distinct(p90, p99, p999, gc)
-  
-percentile_df %>%
-  ggtexttable(rows = NULL, theme = ttheme("minimal")) %>%
-  tab_add_hline(at.row = c(5), row.side = "top", linewidth = 1, linetype = 1)
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "fibonacci", 
+    heap %in% c("20g1c", "20g2c")
+  ) %>%
+  mutate(
+    req_id = as.numeric(as.character(req_id)),
+    duration = duration / 1e6
+  ) %>%
+  ggscatter(x = "req_id", y = "duration", size = 0.5, color = "heap")
 ```
 
 
-```{r,fig.height=4, fig.width=11}
+```{r,fig.height=5, fig.width=8}
 df_latency %>%
   filter(
-    batch_number != 0 &
-    heap != "256m"
+    batch_number != 0,
+    benchmark == "dynamic-html",
+    (heap %in% c("20g1c", "20g2c"))
+  ) %>%
+  mutate(
+    duration = duration / 1e6
   ) %>%
   ggboxplot(x = "heap", y = "duration", color = "gc") %>%
-  facet(facet.by = "cores", nrow = 1, panel.labs = list(cores = c("Single core", "Two cores"))) +
-  theme(axis.text.x=element_text(angle = -10, hjust = 0.5, vjust = 0.06)) +
-  theme_bw()
+  ggpar (
+    xlab = "Heap size / CPU cores",
+    ylab = "Latency (ms)"
+  ) +
+  grids(linetype = "dashed")
 ```
 
 
-
-```{r, fig.height=4, fig.width=9}
+```{r, fig.width=8,fig.height=6}
 df_latency %>%
-  filter(
-    batch_number != 0 &
-    (heap == "256m" | gc == "Epsilon")
-  ) %>%
-  group_by(gc) %>%
-  ggecdf(x = "duration", color = "gc") %>%
-  ggpar(ylab = "") +
-  geom_vline(data = percentile_df, aes(colour = gc, xintercept = p999)) +
-  geom_text(data = percentile_df, 
-            aes(
-              x = p999, y = c(0.25, 0.90, 0.50, 0.20),
-              label = paste(as.integer(p999)),  
-              colour = gc,
-              position = "dodge"), 
-            nudge_x = 100, show.legend = FALSE
-            )
-```
-
-Verificar a frequência de alocação dessa aplicação. O gráfico acima é evidência de que o funcionamento do Serial envolve operações que competem menos com os recursos da aplicação.
-
-Criar os gráficos de alocação para melhorar o nosso caso, escrevendo o paper em cima de perfis de uso de memória, em vez de uso de memória e cpu. Por isso é bem importante mostrar os perfis de alocação em termos de frequência de alocação e quantidade de memória utilizada.
-
-
-```{r, fig.height=5, fig.width=8}
-df_latency %>%
-  filter(batch_number == 1 & heap != "256m") %>%
-  ggboxplot(x = "heap", y = "duration", color = "cores") %>%
-  facet(facet.by = "gc", ncol = 2) %>%
-  ggpar( 
-    title = "Latency boxplot of dynamic-html function",
-    ylab = "Response time (ms)",
-    xlab = "Heap size", x.text.angle = 20
-  ) 
-```
-
-
-```{r, fig.width=7, fig.height=4}
-df_gc %>%
-  filter(run == 5 & benchmark == "dynamic-html" & heap == "512m") %>%
-  mutate(input_line = as.integer(input_line)) %>%
-  ggplot(aes(y = pause_time_ms, x = gc, color = type)) +
-  geom_jitter() +
-  theme_minimal()
-
-df_gc %>%
-  filter(run == 5 & benchmark == "dynamic-html" & heap == "512m") %>%
-  ggboxplot(y = "pause_time_ms", x = "type", fill = "gc") %>%
-  ggpar(
-    xlab = "Pause type",
-    ylab = "Pause time (ms)",
-    title = "Pause time for STW and concurrent collections"
-  )
+  plot_ecdf_latency(b = "fibonacci", nticks = 1)
 ```

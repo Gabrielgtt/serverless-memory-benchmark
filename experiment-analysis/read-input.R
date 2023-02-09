@@ -35,14 +35,13 @@ read_inputs <- function(gc, benchmark, n, file, day, heap) {
         heap = as.character(heap)
       ) %>%
       mutate(
-        cores = ifelse(heap %in% c("256m", "512m", "1g", "20g1c"), "1", "2"),
-        heap = ifelse(heap %in% c("20g1c", "20g2c"), "20g", heap)
+        cores = ifelse(heap %in% c("256m1c", "512m1c", "1g1c", "20g1c"), "1", "2")
       ) %>%
       mutate(
         gc = c(as.character(gc)),
         run = c(as.character(i)),
         day = c(as.character(day)),
-        heap = factor(heap, levels = c("256m", "512m", "1g", "2g", "4g", "20g"))
+        heap = factor(heap, levels = c("256m1c", "512m1c", "1g1c", "2g2c", "4g2c", "20g1c", "20g2c"))
       ) 
   })
   

@@ -1,0 +1,197 @@
+---
+title: "Epsilon Analysis with memory log"
+author: "Gabriel Tavares"
+date: "12/21/2022"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(here)
+```
+
+```{r}
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+## Allocation profiling of serverless functions
+
+In this report we will analyze the allocation behavior of different benchmarks. Our goal is to point critical characteristics of each function in terms of allocation rate to classify them in low/high/frequent/rare allocation intensity. This is useful to create a baseline for discussing about benchmarks for GC in serverless.
+
+```{r}
+# ADD NEW INPUTS HERE!
+experiments_info_alloc_epsilon <- list(
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "01-02", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "processed-alloc.csv", "01-02", "20g2c"),
+  c("Epsilon", "dynamic-html", 20, "processed-alloc.csv", "07-02", "20g1c"),
+  c("Epsilon", "dynamic-html", 20, "processed-alloc.csv", "07-02", "20g2c"),
+  c("Epsilon", "video-processing", 20, "processed-alloc.csv", "07-02", "20g1c"),
+  c("Epsilon", "video-processing", 20, "processed-alloc.csv", "07-02", "20g2c"),
+  c("Epsilon", "thumbnailer", 20, "processed-alloc.csv", "07-02", "20g1c"),
+  c("Epsilon", "thumbnailer", 20, "processed-alloc.csv", "07-02", "20g2c"),
+  c("Epsilon", "factorial", 20, "processed-alloc.csv", "07-02", "20g1c"),
+  c("Epsilon", "factorial", 20, "processed-alloc.csv", "07-02", "20g2c"),
+  c("Epsilon", "fibonacci", 20, "processed-alloc.csv", "01-02", "20g1c"),
+  c("Epsilon", "fibonacci", 20, "processed-alloc.csv", "01-02", "20g2c")
+)
+
+experiments_info_latency_epsilon <- list(
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "01-02", "20g1c"),
+  c("Epsilon", "graph-bfs", 20, "results/graph-bfs.csv", "01-02", "20g2c"),
+  c("Epsilon", "dynamic-html", 20, "results/dynamic-html.csv", "07-02", "20g1c"),
+  c("Epsilon", "dynamic-html", 20, "results/dynamic-html.csv", "07-02", "20g2c"),
+  c("Epsilon", "video-processing", 20, "results/video-processing.csv", "07-02", "20g1c"),
+  c("Epsilon", "video-processing", 20, "results/video-processing.csv", "07-02", "20g2c"),
+  c("Epsilon", "thumbnailer", 20, "results/thumbnailer.csv", "07-02", "20g1c"),
+  c("Epsilon", "thumbnailer", 20, "results/thumbnailer.csv", "07-02", "20g2c"),
+  c("Epsilon", "factorial", 20, "results/factorial.csv", "07-02", "20g1c"),
+  c("Epsilon", "factorial", 20, "results/factorial.csv", "07-02", "20g2c"),
+  c("Epsilon", "fibonacci", 20, "results/fibonacci.csv", "01-02", "20g1c"),
+  c("Epsilon", "fibonacci", 20, "results/fibonacci.csv", "01-02", "20g2c")
+)
+```
+
+
+```{r}
+df_alloc_epsilon <- map_df(experiments_info_alloc_epsilon, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>%
+    group_by(gc, heap, cores, run, benchmark) %>%
+    mutate(
+      alloc = heap_before_mb - lag(heap_after_mb, default = first(heap_before_mb)),
+      cumm_alloc = cumsum(alloc),
+      ts_s = ts_s - first(ts_s),
+      alloc_per_sec = alloc / (ts_s - lag(ts_s))
+      ) %>%
+    slice(2:n()) %>% # Remove first and last row of each group
+    slice(1:(n()-1))
+  })
+
+df_latency_epsilon <- map_df(experiments_info_latency_epsilon, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% add_batch_number() 
+  })
+```
+
+The way we executed the experiment is modifying the benchmarks to save the Heap usage before and after each function call. Here, a function corresponds to a serverless function, but in a controlled local environment. We try to eliminate noise from the GC by using EpsilonGC.
+
+## Allocation
+
+We collected the difference between the heap usage before and after each request. Bellow I calculate the average of this metric per request and per time.
+
+```{r}
+b_to_mb = 1024 * 1024
+nano_to_ms = 1000000
+nano_to_s = 1000000000
+```
+
+```{r}
+alloc_info <- df_latency_epsilon %>%
+  filter(batch_number != 0 & cores == 2) %>%
+  mutate(alloc_mb = alloc_b / b_to_mb) %>%
+  group_by(gc, benchmark) %>%
+  mutate(
+    mean_alloc_mb = format(round(mean(alloc_mb), 3), nsmall = 3),
+    mean_duration_s = format(round(median(duration / nano_to_ms), 3), nsmall = 3),
+    mean_alloc_per_sec = format(round(mean(alloc_mb / (duration / nano_to_s )), 3), nsmall = 3)
+  ) %>%
+  arrange(as.numeric(mean_alloc_mb)) %>%
+  mutate(
+    mean_alloc_mb = ifelse(mean_alloc_mb < 1/1024, "< 1 Kb", as.character(mean_alloc_mb)),
+    mean_alloc_per_sec = ifelse(mean_alloc_per_sec < 1/1024, "< 1 Kb/s", as.character(mean_alloc_per_sec))
+  ) %>%
+  ungroup() %>%
+  distinct(benchmark, mean_alloc_mb, mean_duration_s, mean_alloc_per_sec)
+
+t1 <- alloc_info %>%
+  ggtexttable(rows = NULL, theme = ttheme("minimal", tbody.style = tbody_style(hjust=1, x=0.9)), 
+              cols = c(
+                "Function", 
+                "Avg alloc/req (Mb)", 
+                "Avg Latency (ms)", 
+                "Avg alloc/s (Mb/s)"
+                )
+              ) %>%
+   table_cell_bg(row = 2:4, column = 1:ncol(alloc_info), fill = "deepskyblue") %>%
+   table_cell_bg(row = 5:5, column = 1:ncol(alloc_info), fill = "lightgreen") %>%
+   table_cell_bg(row = 6:6, column = 1:ncol(alloc_info), fill = "orange2") %>%
+   table_cell_bg(row = 7:7, column = 1:ncol(alloc_info), fill = "gold1")
+
+alloc_groups <- tibble(Groups = c("Minimal", "Medium", "Heavy-fast", "Heavy-Slow"))
+
+t2 <- alloc_groups %>%
+  ggtexttable(rows = NULL) %>%
+   table_cell_bg(row = 2, column = 1, fill = "deepskyblue", linewidth = 0) %>%
+   table_cell_bg(row = 3, column = 1, fill = "lightgreen", linewidth = 0) %>%
+   table_cell_bg(row = 4, column = 1, fill = "orange2", linewidth = 0) %>%
+   table_cell_bg(row = 5, column = 1, fill = "gold1", linewidth = 0)
+
+ggarrange(t1, t2, ncol = 1)
+```
+
+It would be useful to know the distribution of allocation size per request per benchmark.
+
+
+
+```{r, fig.width=8, fig.height=3}
+df_latency_epsilon %>%
+  filter(batch_number != 0 & cores == 2) %>%
+  mutate(
+    alloc_mb = alloc_b / b_to_mb
+  ) %>%
+  arrange(alloc_b) %>%
+  ggboxplot(x = "benchmark", y = "alloc_mb") %>%
+  ggpar(
+    xlab = "Function",
+    ylab = "Alloc per request (Mb)"
+  ) + 
+  grids(linetype = "dashed")
+```
+
+```{r}
+df_latency_epsilon %>%
+  filter(batch_number != 0, benchmark == "dynamic-html") %>%
+  group_by(gc, cores) %>%
+  mutate(
+    mean_alloc_b = max(alloc_b),
+    mean_duration_s = format(round(mean(duration / nano_to_ms), 3), nsmall = 3),
+    mean_alloc_per_sec = format(round(mean(alloc_b / (duration / nano_to_s )), 3), nsmall = 3)
+  ) %>%
+  arrange(as.numeric(mean_alloc_b)) %>%
+  ungroup() %>%
+  distinct(benchmark, cores, mean_alloc_b, mean_duration_s, mean_alloc_per_sec) %>%
+  ggtexttable(rows = NULL)
+```
+
+
+```{r}
+df_latency_epsilon %>%
+  filter(
+    batch_number != 0,
+    benchmark == "video-processing", 
+    heap %in% c("20g1c", "20g2c")
+  ) %>%
+  mutate(
+    req_id = as.numeric(as.character(req_id)),
+    duration = duration / 1e6,
+    ticks = max(duration) / 10
+  ) %>%
+  ggscatter(x = "req_id", y = "duration", size = 0.5, color = "heap")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
