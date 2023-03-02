@@ -19,11 +19,13 @@ read_inputs <- function(gc, benchmark, n, file, day, heap) {
   for (x in 1:n) {
     # CHANGE DIR HERE
     file_path <- here(paste(sep = "", "results/exp-", day), paste(sep = "", dir_name, x, "/", file))
+      
     if (count_lines(file_path, verbose = FALSE) <= 1) {
-      print(paste("File ", file_path, " is empty."))
+      print(paste("file ", file_path, " is empty."))
     } else {
       file_paths = c(file_paths, file_path)
-    }
+    }        
+      
   }
   
   df_list <- map(file_paths, read_input, c(1:n))

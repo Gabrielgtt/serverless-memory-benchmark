@@ -86,48 +86,44 @@ nano_to_ms = 1000000
 nano_to_s = 1000000000
 ```
 
-```{r}
+```{r, fig.width=4}
 alloc_info <- df_latency_epsilon %>%
   filter(batch_number != 0 & cores == 2) %>%
   mutate(alloc_mb = alloc_b / b_to_mb) %>%
   group_by(gc, benchmark) %>%
   mutate(
-    mean_alloc_mb = format(round(mean(alloc_mb), 3), nsmall = 3),
-    mean_duration_s = format(round(median(duration / nano_to_ms), 3), nsmall = 3),
-    mean_alloc_per_sec = format(round(mean(alloc_mb / (duration / nano_to_s )), 3), nsmall = 3)
+    mean_alloc_mb = format(round(mean(alloc_mb), 3), nsmall = 3)
+    # mean_duration_s = format(round(median(duration / nano_to_ms), 3), nsmall = 3),
+    # mean_alloc_per_sec = format(round(mean(alloc_mb / (duration / nano_to_s )), 3), nsmall = 3)
   ) %>%
   arrange(as.numeric(mean_alloc_mb)) %>%
   mutate(
-    mean_alloc_mb = ifelse(mean_alloc_mb < 1/1024, "< 1 Kb", as.character(mean_alloc_mb)),
-    mean_alloc_per_sec = ifelse(mean_alloc_per_sec < 1/1024, "< 1 Kb/s", as.character(mean_alloc_per_sec))
+    mean_alloc_mb = ifelse(mean_alloc_mb < 1/1024, "< 1 Kb", as.character(mean_alloc_mb))
+    # mean_alloc_per_sec = ifelse(mean_alloc_per_sec < 1/1024, "< 1 Kb/s", as.character(mean_alloc_per_sec))
   ) %>%
   ungroup() %>%
-  distinct(benchmark, mean_alloc_mb, mean_duration_s, mean_alloc_per_sec)
+  distinct(benchmark, mean_alloc_mb)
 
 t1 <- alloc_info %>%
   ggtexttable(rows = NULL, theme = ttheme("minimal", tbody.style = tbody_style(hjust=1, x=0.9)), 
               cols = c(
                 "Function", 
-                "Avg alloc/req (Mb)", 
-                "Avg Latency (ms)", 
-                "Avg alloc/s (Mb/s)"
+                "Avg alloc/req (Mb)"
                 )
               ) %>%
    table_cell_bg(row = 2:4, column = 1:ncol(alloc_info), fill = "deepskyblue") %>%
-   table_cell_bg(row = 5:5, column = 1:ncol(alloc_info), fill = "lightgreen") %>%
-   table_cell_bg(row = 6:6, column = 1:ncol(alloc_info), fill = "orange2") %>%
-   table_cell_bg(row = 7:7, column = 1:ncol(alloc_info), fill = "gold1")
+   table_cell_bg(row = 5:6, column = 1:ncol(alloc_info), fill = "lightgreen") %>%
+   table_cell_bg(row = 7:7, column = 1:ncol(alloc_info), fill = "orange2")
 
-alloc_groups <- tibble(Groups = c("Minimal", "Medium", "Heavy-fast", "Heavy-Slow"))
+alloc_groups <- tibble(Groups = c("Minimal", "Medium", "Heavy"))
 
 t2 <- alloc_groups %>%
   ggtexttable(rows = NULL) %>%
    table_cell_bg(row = 2, column = 1, fill = "deepskyblue", linewidth = 0) %>%
    table_cell_bg(row = 3, column = 1, fill = "lightgreen", linewidth = 0) %>%
-   table_cell_bg(row = 4, column = 1, fill = "orange2", linewidth = 0) %>%
-   table_cell_bg(row = 5, column = 1, fill = "gold1", linewidth = 0)
+   table_cell_bg(row = 4, column = 1, fill = "orange2", linewidth = 0)
 
-ggarrange(t1, t2, ncol = 1)
+ggarrange(t1, t2, nrow = 1, widths = c(4, 1))
 ```
 
 It would be useful to know the distribution of allocation size per request per benchmark.
@@ -136,7 +132,7 @@ It would be useful to know the distribution of allocation size per request per b
 
 ```{r, fig.width=8, fig.height=3}
 df_latency_epsilon %>%
-  filter(batch_number != 0 & cores == 2) %>%
+  filter(batch_number != 0, cores == 2, benchmark %in% c("factorial", "fibonacci")) %>%
   mutate(
     alloc_mb = alloc_b / b_to_mb
   ) %>%

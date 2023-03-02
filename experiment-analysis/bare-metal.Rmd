@@ -94,7 +94,7 @@ df_heavyslow <- df_latency %>%
   filter(
     batch_number != 0,
     benchmark %in% c("graph-bfs"),
-    heap %in% c("256m1c", "20g1c")
+    heap %in% c("4g2c", "20g1c")
   ) %>%
   mutate(
     duration = duration / 1e6
@@ -115,7 +115,7 @@ ecdf_heavyslow_256m <- df_heavyslow %>%
   ggpar(
     xlab = "Response time (ms)",
     ylab = "ECDF",
-    xticks.by = 1000
+    xticks.by = 100
   ) +
   grids(linetype = "dashed") +
   geom_vline(data = df_heavyslow, linetype = "dotted", size = 0.8, show.legend = FALSE, aes(colour = gc, xintercept = p99_lat)) +
@@ -184,12 +184,6 @@ df_latency %>% plot_ecdf_latency("dynamic-html", nticks = )
 ```
 
 ```{r}
-calculate_median <- function(df) {
-  smedian <- \(d, i, ...) d[i,] %>% pull(duration) %>% median()
-  bdf <- boot(data = df, statistic = smedian, R = 4000)
-  tidy(bdf, conf.level = .95, conf.int = TRUE) %>% mutate(heap = df$heap[1], gc = df$gc[1], cores = df$cores[1])
-}
-
 calculate_quantile <- function(df, p = .99) {
   squantile <- \(d, i, ...) d[i,] %>% pull(duration) %>% quantile(p)
   bdf <- boot(data = df, statistic = squantile, R = 4000)
@@ -212,7 +206,7 @@ grouped_dh_latency <- df_latency %>%
   group_split()
 
 
-dh_median_ic <- grouped_dh_latency %>% map_df(~calculate_median(.))
+dh_median_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = 0.5))
 dh_p95_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .95))
 dh_p99_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .99))
 ```
@@ -257,17 +251,33 @@ df_latency %>%
 
 ```{r, fig.width=8,fig.height=6}
 df_latency %>%
-  plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("2g2c", "20g2c"), gcs = all_gcs, nticks = 5)
-
-df_latency %>%
-  plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("4g2c", "20g2c"), gcs = all_gcs, nticks = 5)
+  plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("1g1c", "20g2c"), gcs = all_gcs, nticks = 10)
 ```
+
+```{r}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "thumbnailer",
+    gc %in% c("Epsilon", "Serial"),
+    heap %in% c("1g1c", "20g1c")
+  ) %>% 
+  mutate( duration = duration / 1e6 ) %>%
+  gghistogram(x = "duration", color = "gc") +
+  xscale("log10")
+```
+
 
 # Light-fast
 
-```{r, fig.width=8,fig.height=6}
-df_latency %>%
-  plot_ecdf_latency(b = "thumbnailer", c = "gc", heaps = c("2g2c", "20g2c"), gcs = all_gcs, nticks = 5)
+```{r, fig.width=15, fig.height=6}
+p1 <- df_latency %>%
+  plot_ecdf_latency(b = "factorial", c = "gc", heaps = c("1g1c", "20g2c"), gcs = all_gcs, nticks = 1000)
+
+p2 <- df_latency %>%
+  plot_ecdf_latency(b = "factorial", c = "gc", heaps = c("256m1c", "20g2c"), gcs = all_gcs, nticks = 1000)
+
+ggarrange(p1, p2, nrow = 1)
 ```
 
 
@@ -279,15 +289,18 @@ df_latency %>%
 ```{r}
 df_latency %>%
   filter(
-    batch_number != 0,
+    # batch_number != 0,
     benchmark == "fibonacci", 
-    heap %in% c("20g1c", "20g2c")
+    # heap %in% c("20g1c", "20g2c")
+    heap %in% c("256m1c", "512m1c"),
+    gc == "G1"
   ) %>%
   mutate(
     req_id = as.numeric(as.character(req_id)),
     duration = duration / 1e6
   ) %>%
-  ggscatter(x = "req_id", y = "duration", size = 0.5, color = "heap")
+  ggscatter(x = "req_id", y = "duration", size = 0.5, color = "heap") %>%
+  facet(facet.by = "batch_number", nrow = 1)
 ```
 
 

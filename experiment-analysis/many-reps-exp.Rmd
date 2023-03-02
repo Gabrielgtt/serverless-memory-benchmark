@@ -1,0 +1,433 @@
+---
+title: "50 repetitions exp"
+author: "Gabriel Tavares"
+date: "2/13/2023"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(patchwork)
+library(gt)
+library(boot)
+library(ggplot2)
+library(ggpubr)
+library(here)
+library(broom)
+```
+
+```{r}
+source(here("read-input.R"))
+source(here("benchmark-plots.R"))
+```
+
+```{r}
+experiments_info_latency <- list()
+```
+
+```{r}
+all_gcs <- c("Serial", "Shenandoah", "G1")
+all_heap_sizes <- c("256m1c", "512m1c", "1g1c")
+all_functions <- c("factorial", "dynamic-html", "video-processing", "thumbnailer", "sleep")
+day <- "10-02"
+n_repetions <- 50
+file_name <- "processed-alloc.csv"
+
+for (gc in all_gcs) {
+  for (hs in all_heap_sizes) {
+    for (fu in all_functions) {
+      index <- length(experiments_info_latency) + 1
+      
+      line_latency <- c(gc, fu, n_repetions, paste("results/", fu, ".csv", sep = ""), day, hs)
+      experiments_info_latency[[index]] <- line_latency
+    }
+  }
+}
+```
+
+```{r}
+all_gcs <- c("Serial", "Shenandoah", "G1")
+all_heap_sizes <- c("256m1c", "512m1c", "1g1c")
+all_functions <- c("graph-bfs", "fibonacci")
+day <- "01-02"
+n_repetions <- 20
+file_name <- "processed-alloc.csv"
+
+for (gc in all_gcs) {
+  for (hs in all_heap_sizes) {
+    for (fu in all_functions) {
+      index <- length(experiments_info_latency) + 1
+      
+      line_latency <- c(gc, fu, n_repetions, paste("results/", fu, ".csv", sep = ""), day, hs)
+      experiments_info_latency[[index]] <- line_latency
+    }
+  }
+}
+```
+
+
+```{r}
+df_latency <- df_latency %>%
+  mutate(heap = as.character(heap)) %>%
+  mutate(heap = substr(heap, 1, nchar(heap)-2)) %>%
+  mutate(heap = factor(heap, levels = c("256m", "512m", "1g")))
+```
+
+```{r}
+df_latency <- map_df(experiments_info_latency, function(x) { 
+  read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% 
+    add_batch_number() %>%
+    mutate(cores = case_when(cores == 1 ~ "single-core", cores == 2 ~ "dual-core")) %>%
+    mutate(cores = factor(cores, levels = c("single-core", "dual-core")))
+  })
+```
+
+# Heavy-slow
+
+In this section we analyze the latency for Heavy-slow functions, like graph-bfs.
+
+```{r, fig.width=10,fig.height=4}
+df_heavyslow <- df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark %in% c("graph-bfs"),
+    heap %in% c("256m")
+  ) %>%
+  mutate(
+    duration = duration / 1e9
+  ) %>%
+  group_by(heap, gc) %>%
+  mutate(
+    p99_lat = quantile(duration, .99),
+    median_lat = quantile(duration, .5)
+  ) %>% 
+  ungroup() %>%
+  mutate(
+    rel_median_lat = median_lat / min(median_lat),
+    rel_p99_lat = p99_lat / min(p99_lat)
+  )
+
+ecdf_heavyslow_256m <- df_heavyslow %>%
+  ggecdf(x = "duration", color = "gc") %>%
+  ggpar(
+    xlab = "Response time (s)",
+    ylab = "ECDF",
+    xticks.by = 1
+  ) +
+  grids(linetype = "dashed") +
+  geom_vline(data = df_heavyslow, linetype = "dotted", size = 0.8, show.legend = FALSE, aes(colour = gc, xintercept = p99_lat)) +
+  geom_vline(data = df_heavyslow, linetype = "dashed", size = 0.5, show.legend = FALSE, aes(colour = gc, xintercept = median_lat)) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = 0.190, 
+    size = 6,
+    show_guide = FALSE,
+    aes(x = p99_lat, y = 0.2, label = "99th", angle = -90, color = gc)
+  ) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = -0.150,
+    size = 6,
+    show_guide = FALSE,
+    aes(x = median_lat, y = 0.8, label = "Median", angle = -90, color = gc)
+  ) + 
+  theme(text=element_text(size=19))
+
+
+table_heavyslow_256m <- df_heavyslow %>%
+      distinct(rel_p99_lat, rel_median_lat, gc) %>%
+      arrange(rel_p99_lat) %>%
+      mutate(
+        rel_p99_lat = paste(format(round(rel_p99_lat, 2), nsmall = 2), "x", sep = ""),
+        rel_median_lat = paste(format(round(rel_median_lat, 2), nsmall = 2), "x", sep = "")
+      ) %>%
+      select(gc, rel_median_lat, rel_p99_lat) %>%
+      ggtexttable(rows = NULL, theme = ttheme(tbody.style = tbody_style(hjust=1, x=0.9)), cols = c("GC", "Median", "99th")) 
+
+
+ggarrange(ecdf_heavyslow_256m, table_heavyslow_256m, nrow = 1, widths = c(3, 1))
+```
+
+```{r,fig.height=5, fig.width=8}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark %in% c("graph-bfs"),
+    gc != "Epsilon"
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggpar (
+    xlab = "Heap size",
+    ylab = "Latency (ms)"
+  ) +
+  grids(linetype = "dashed") + 
+  theme(text=element_text(size=19))
+```
+
+
+```{r, fig.width=7,fig.height=4}
+df_latency %>% plot_ecdf_latency("graph-bfs", nticks = 50)
+```
+
+
+
+# Heavy-fast
+
+Functions like the Dynamic-html.
+
+```{r}
+calculate_quantile <- function(df, p = .99) {
+  squantile <- \(d, i, ...) d[i,] %>% pull(duration) %>% quantile(p)
+  bdf <- boot(data = df, statistic = squantile, R = 4000)
+  tidy(bdf, conf.level = .95, conf.int = TRUE) %>% mutate(heap = df$heap[1], gc = df$gc[1], cores = df$cores[1])
+}
+
+plot_latency_ic <- function(df) {
+  p <- df %>%
+    ggplot(aes(y = statistic, x = heap, color = gc)) +
+    geom_linerange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = .5)) +
+    geom_point(aes(shape = gc), size = 2, position = position_dodge(width = .5)) +
+    theme_minimal() + 
+    theme(text=element_text(size=18)) 
+  
+  p <- p %>%
+    ggpar(xlab = "Heap", ylab = "Latency (ms)") %>%
+    set_palette("grey") 
+  
+  return(p)
+}
+
+grouped_dh_latency <- df_latency %>%
+  filter(batch_number != 0, benchmark == "dynamic-html") %>%
+  mutate(duration = duration / 1e6) %>%
+  group_by(gc, heap) %>%
+  group_split()
+
+
+dh_median_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = 0.5))
+dh_p95_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .95))
+dh_p99_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .99))
+```
+
+```{r, fig.height=3.5, fig.width=7}
+ggarrange(
+  dh_p99_ic %>% plot_latency_ic(),
+  dh_p95_ic %>% plot_latency_ic(),
+  labels = c("95th", "99th"), 
+  label.x = 0.48,
+  # font.label = list(face = "plain"), 
+  common.legend = TRUE
+)
+```
+```{r, fig.height=4, fig.width=8}
+dh_median_ic %>% plot_latency_ic()
+```
+
+```{r,fig.height=5, fig.width=8}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "dynamic-html"
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggpar (
+    xlab = "Heap size / CPU cores",
+    ylab = "Latency (ms)"
+  ) +
+  grids(linetype = "dashed") 
+```
+
+```{r, fig.width=5,fig.height=5}
+df_latency %>% plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("1g"), gcs = c("Shenandoah", "G1", "Serial"), nticks = 10)
+```
+
+```{r, fig.width=15,fig.height=6}
+ggarrange(
+  df_latency %>% plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("256m"), gcs = c("Shenandoah", "G1", "Serial"), nticks = 10),
+  df_latency %>% plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("512m"), gcs = c("Shenandoah", "G1", "Serial"), nticks = 10),
+  df_latency %>% plot_ecdf_latency(b = "dynamic-html", c = "gc", heaps = c("1g"), gcs = c("Shenandoah", "G1", "Serial"), nticks = 10),
+  ncol = 3
+)
+```
+
+```{r}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "thumbnailer",
+    gc %in% c("Serial", "Shenandoah", "G1"),
+    heap %in% c("1g")
+  ) %>% 
+  mutate( duration = duration / 1e6 ) %>%
+  gghistogram(x = "duration", color = "gc") +
+  xscale("log10")
+```
+
+
+# Light-fast
+
+REMEMBER TO USE EPSILON FOR THIS ONE!!
+
+```{r, fig.width=15, fig.height=6}
+p1 <- df_latency %>%
+  plot_ecdf_latency(b = "factorial", c = "gc", heaps = c("1g1c"), gcs = all_gcs, nticks = 10)
+
+p2 <- df_latency %>%
+  plot_ecdf_latency(b = "factorial", c = "gc", heaps = c("256m1c"), gcs = all_gcs, nticks = 10)
+
+ggarrange(p1, p2, nrow = 1)
+```
+
+
+
+# Minimal
+
+```{r, fig.width=10,fig.height=4}
+df_minimal <- df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark %in% c("fibonacci"),
+    heap %in% c("256m1c"),
+    duration < 750000000
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  group_by(heap, gc) %>%
+  mutate(
+    p99_lat = quantile(duration, .99),
+    median_lat = quantile(duration, .5)
+  ) %>% 
+  ungroup() %>%
+  mutate(
+    rel_median_lat = median_lat / min(median_lat),
+    rel_p99_lat = p99_lat / min(p99_lat)
+  )
+
+ecdf_minimal_256m <- df_minimal %>%
+  ggecdf(x = "duration", color = "gc") %>%
+  ggpar(
+    xlab = "Response time (ms)",
+    ylab = "ECDF",
+    xticks.by = 1
+  ) +
+  grids(linetype = "dashed") +
+  geom_vline(data = df_minimal, linetype = "dotted", size = 0.8, show.legend = FALSE, aes(colour = gc, xintercept = p99_lat)) +
+  # geom_vline(data = df_minimal, linetype = "dashed", size = 0.5, show.legend = FALSE, aes(colour = gc, xintercept = median_lat)) +
+  geom_text(
+    data = df_minimal, 
+    nudge_x = 0.5, 
+    size = 6,
+    show_guide = FALSE,
+    aes(x = p99_lat, y = 0.2, label = "99th", angle = -90, color = gc)
+  ) #+
+  #geom_text(
+    #data = df_minimal, 
+    #nudge_x = -0.5,
+    #size = 6,
+    #show_guide = FALSE,
+    #aes(x = median_lat, y = 0.8, label = "Median", angle = -90, color = gc)
+  #)
+
+table_minimal_256m <- df_minimal %>%
+      distinct(rel_p99_lat, rel_median_lat, gc) %>%
+      arrange(rel_p99_lat) %>%
+      mutate(
+        rel_p99_lat = paste(format(round(rel_p99_lat, 2), nsmall = 2), "x", sep = ""),
+        rel_median_lat = paste(format(round(rel_median_lat, 2), nsmall = 2), "x", sep = "")
+      ) %>%
+      select(gc, rel_median_lat, rel_p99_lat) %>%
+      ggtexttable(rows = NULL, theme = ttheme(tbody.style = tbody_style(hjust=1, x=0.9)), cols = c("GC", "Median", "99th")) 
+
+
+ggarrange(ecdf_minimal_256m, table_minimal_256m, nrow = 1, widths = c(3, 1))
+```
+
+
+```{r,fig.height=5, fig.width=8}
+df_latency %>%
+  filter(
+    batch_number != 0,
+    benchmark == "fibonacci",
+    duration < 750000000
+  ) %>%
+  mutate(
+    duration = duration / 1e6
+  ) %>%
+  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggpar (
+    xlab = "Heap size / CPU cores",
+    ylab = "Latency (ms)"
+  ) +
+  grids(linetype = "dashed")
+```
+
+```{r}
+grouped_fb_latency <- df_latency %>%
+  filter(batch_number != 0, benchmark == "fibonacci", duration < 750000000) %>%
+  mutate(duration = duration / 1e6) %>%
+  group_by(gc, heap) %>%
+  group_split()
+
+
+fb_median_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = 0.5))
+fb_p95_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .95))
+fb_p99_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .99)) 
+```
+
+
+```{r, fig.height=6, fig.width=4}
+ggarrange(
+  fb_p99_ic %>% plot_latency_ic() %>% ggpar(legend = "none", ylab = "Latency (ms)", xlab = "Heap") + theme(text=element_text(size=13)),
+  fb_p95_ic %>% plot_latency_ic() %>% ggpar(legend = "top", ylab = "Latency (ms)", xlab = "Heap") + theme(text=element_text(size=13)), 
+  labels = c("95th", "99th"), font.label = list(face = "plain"),
+  ncol = 1
+) 
+```
+
+
+```{r, fig.width=5, fig.height=5} 
+df_latency %>% plot_ecdf_latency(b = "factorial", c = "gc", heaps = c("256m"), gcs = c("Shenandoah", "G1", "Serial"), nticks = 10)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

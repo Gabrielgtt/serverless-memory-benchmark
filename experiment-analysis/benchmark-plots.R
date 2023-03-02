@@ -57,7 +57,8 @@ plot_ecdf_latency <- function(df, b, color_by = "heap", heaps = c("20g1c", "20g2
       ylab = "ECDF",
       xticks.by = nticks
     ) +
-    grids(linetype = "dashed")
+    grids(linetype = "dashed") + 
+    theme(text=element_text(size=15))
   
   table_df <- df %>%
         distinct(heap, rel_median_lat, rel_p95_lat, rel_p99_lat, rel_p999_lat, gc) %>%
@@ -74,7 +75,7 @@ plot_ecdf_latency <- function(df, b, color_by = "heap", heaps = c("20g1c", "20g2
         ggtexttable(
           rows = NULL, 
           theme = ttheme(tbody.style = tbody_style(hjust=1, x=0.9)),
-          cols = c("Heap/#Cores", "GC", "Median", "95th", "99th", "999th")
+          cols = c("Heap", "GC", "Median", "95th", "99th", "999th")
         ) %>% 
         table_cell_bg(row = which.min(table_df$rel_median_lat)[[1]] + 1, column = 3, fill="darkolivegreen1", color = "darkolivegreen4") %>%
         table_cell_bg(row = which.min(table_df$rel_p95_lat)[[1]] + 1, column = 4, fill="darkolivegreen1", color = "darkolivegreen4") %>%
@@ -83,7 +84,8 @@ plot_ecdf_latency <- function(df, b, color_by = "heap", heaps = c("20g1c", "20g2
         table_cell_bg(row = which.max(table_df$rel_median_lat)[[1]] + 1, column = 3, fill="coral1", color = "coral4") %>%
         table_cell_bg(row = which.max(table_df$rel_p95_lat)[[1]] + 1, column = 4, fill="coral1", color = "coral4") %>%
         table_cell_bg(row = which.max(table_df$rel_p99_lat)[[1]] + 1, column = 5, fill="coral1", color = "coral4") %>%
-        table_cell_bg(row = which.max(table_df$rel_p999_lat)[[1]] + 1, column = 6, fill="coral1", color = "coral4")
+        table_cell_bg(row = which.max(table_df$rel_p999_lat)[[1]] + 1, column = 6, fill="coral1", color = "coral4") + 
+        theme(text=element_text(size=13))
   
   
   ggarrange(ecdf_plot, table, ncol = 1, heights = c(3, 1))
