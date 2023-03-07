@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 experiment-analysis/results
+experiment-scripts/vars.env

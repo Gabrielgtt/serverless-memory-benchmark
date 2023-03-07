@@ -72,6 +72,19 @@ df_latency <- df_latency %>%
   mutate(heap = as.character(heap)) %>%
   mutate(heap = substr(heap, 1, nchar(heap)-2)) %>%
   mutate(heap = factor(heap, levels = c("256m", "512m", "1g")))
+
+
+df_latency <- df_latency %>%
+  mutate(
+    heap = case_when(
+      heap == "256m" ~ "256Mb",
+      heap == "512m" ~ "512Mb",
+      heap == "1g" ~ "1Gb"
+    )
+  )
+
+df_latency <- df_latency %>%
+  mutate(heap = factor(heap, levels = c("256Mb", "512Mb", "1Gb")))
 ```
 
 ```{r}
@@ -87,12 +100,12 @@ df_latency <- map_df(experiments_info_latency, function(x) {
 
 In this section we analyze the latency for Heavy-slow functions, like graph-bfs.
 
-```{r, fig.width=10,fig.height=4}
+```{r, fig.width=6,fig.height=4}
 df_heavyslow <- df_latency %>%
   filter(
     batch_number != 0,
     benchmark %in% c("graph-bfs"),
-    heap %in% c("256m")
+    heap %in% c("256Mb")
   ) %>%
   mutate(
     duration = duration / 1e9
@@ -100,6 +113,7 @@ df_heavyslow <- df_latency %>%
   group_by(heap, gc) %>%
   mutate(
     p99_lat = quantile(duration, .99),
+    # max_lat = max(duration),
     median_lat = quantile(duration, .5)
   ) %>% 
   ungroup() %>%
@@ -107,33 +121,6 @@ df_heavyslow <- df_latency %>%
     rel_median_lat = median_lat / min(median_lat),
     rel_p99_lat = p99_lat / min(p99_lat)
   )
-
-ecdf_heavyslow_256m <- df_heavyslow %>%
-  ggecdf(x = "duration", color = "gc") %>%
-  ggpar(
-    xlab = "Response time (s)",
-    ylab = "ECDF",
-    xticks.by = 1
-  ) +
-  grids(linetype = "dashed") +
-  geom_vline(data = df_heavyslow, linetype = "dotted", size = 0.8, show.legend = FALSE, aes(colour = gc, xintercept = p99_lat)) +
-  geom_vline(data = df_heavyslow, linetype = "dashed", size = 0.5, show.legend = FALSE, aes(colour = gc, xintercept = median_lat)) +
-  geom_text(
-    data = df_heavyslow, 
-    nudge_x = 0.190, 
-    size = 6,
-    show_guide = FALSE,
-    aes(x = p99_lat, y = 0.2, label = "99th", angle = -90, color = gc)
-  ) +
-  geom_text(
-    data = df_heavyslow, 
-    nudge_x = -0.150,
-    size = 6,
-    show_guide = FALSE,
-    aes(x = median_lat, y = 0.8, label = "Median", angle = -90, color = gc)
-  ) + 
-  theme(text=element_text(size=19))
-
 
 table_heavyslow_256m <- df_heavyslow %>%
       distinct(rel_p99_lat, rel_median_lat, gc) %>%
@@ -145,11 +132,40 @@ table_heavyslow_256m <- df_heavyslow %>%
       select(gc, rel_median_lat, rel_p99_lat) %>%
       ggtexttable(rows = NULL, theme = ttheme(tbody.style = tbody_style(hjust=1, x=0.9)), cols = c("GC", "Median", "99th")) 
 
+ecdf_heavyslow_256m <- df_heavyslow %>%
+  ggecdf(x = "duration", linetype = "gc") %>%
+  set_palette("grey") %>%
+  ggpar(
+    xlab = "Response time (s)",
+    ylab = "ECDF",
+    xticks.by = 1
+  ) +
+  grids(linetype = "dashed") +
+  geom_vline(data = df_heavyslow, size = 0.5, show.legend = FALSE, aes(linetype = gc, xintercept = p99_lat)) +
+  geom_vline(data = df_heavyslow, size = 0.5, show.legend = FALSE, aes(linetype = gc, xintercept = median_lat)) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = 0.198, 
+    size = 5,
+    show_guide = FALSE,
+    # aes(x = p99_lat, y = 0.3, label = bquote("99"~^th~-percentile), angle = -90)
+    aes(x = p99_lat, y = 0.3, label = "99th-percentile", angle = -90)
+  ) +
+  geom_text(
+    data = df_heavyslow, 
+    nudge_x = -0.140,
+    size = 5,
+    show_guide = FALSE,
+    aes(x = median_lat, y = 0.8, label = "Median", angle = -90)
+  ) + 
+  theme(text=element_text(size=14))
 
-ggarrange(ecdf_heavyslow_256m, table_heavyslow_256m, nrow = 1, widths = c(3, 1))
+table_heavyslow_256m
+
+ecdf_heavyslow_256m
 ```
 
-```{r,fig.height=5, fig.width=8}
+```{r,fig.height=4, fig.width=6.5}
 df_latency %>%
   filter(
     batch_number != 0,
@@ -157,15 +173,20 @@ df_latency %>%
     gc != "Epsilon"
   ) %>%
   mutate(
-    duration = duration / 1e6
+    duration = duration / 1e9
   ) %>%
-  ggboxplot(x = "heap", y = "duration", color = "gc") %>%
+  ggboxplot(x = "gc", y = "duration", color = "gc") %>%
   ggpar (
-    xlab = "Heap size",
-    ylab = "Latency (ms)"
-  ) +
+    xlab = "",
+    ylab = "Response time (s)", 
+    x.text.angle = 40, 
+    legend = "none", 
+    yticks.by = 2
+  ) %>%
+  facet(facet.by = "heap") %>%
+  set_palette("grey") +
   grids(linetype = "dashed") + 
-  theme(text=element_text(size=19))
+  theme(text=element_text(size=14))
 ```
 
 
@@ -188,14 +209,15 @@ calculate_quantile <- function(df, p = .99) {
 
 plot_latency_ic <- function(df) {
   p <- df %>%
-    ggplot(aes(y = statistic, x = heap, color = gc)) +
+    ggplot(aes(y = statistic, x = gc)) +
     geom_linerange(aes(ymin = conf.low, ymax = conf.high), position = position_dodge(width = .5)) +
-    geom_point(aes(shape = gc), size = 2, position = position_dodge(width = .5)) +
+    geom_point(aes(shape = gc), size = 1.5, position = position_dodge(width = .5)) +
+    facet_grid(. ~ heap) +
     theme_minimal() + 
-    theme(text=element_text(size=18)) 
+    theme(text=element_text(size=13), axis.text.x = element_text(angle = 45, hjust=1)) 
   
   p <- p %>%
-    ggpar(xlab = "Heap", ylab = "Latency (ms)") %>%
+    ggpar(xlab = "", ylab = "Response Time (ms)") %>%
     set_palette("grey") 
   
   return(p)
@@ -213,16 +235,20 @@ dh_p95_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .95))
 dh_p99_ic <- grouped_dh_latency %>% map_df(~calculate_quantile(., p = .99))
 ```
 
-```{r, fig.height=3.5, fig.width=7}
-ggarrange(
-  dh_p99_ic %>% plot_latency_ic(),
-  dh_p95_ic %>% plot_latency_ic(),
-  labels = c("95th", "99th"), 
-  label.x = 0.48,
-  # font.label = list(face = "plain"), 
-  common.legend = TRUE
-)
+```{r, fig.height=3, fig.width=4}
+dh_p95_ic %>% 
+  mutate(gc = factor(gc, levels = c("Serial", "G1", "Shenandoah"))) %>% 
+  plot_latency_ic() %>% 
+  ggpar(legend = "none", ylab = "Response Time (ms)", xlab = "", ylim = c(60, 90)) + 
+  theme(text=element_text(size=12))
+
+dh_p99_ic %>% 
+  mutate(gc = factor(gc, levels = c("Serial", "G1", "Shenandoah"))) %>% 
+  plot_latency_ic() %>% 
+  ggpar(legend = "none", ylab = "Response Time (ms)", xlab = "", ylim = c(60, 90)) + 
+  theme(text=element_text(size=12))
 ```
+
 ```{r, fig.height=4, fig.width=8}
 dh_median_ic %>% plot_latency_ic()
 ```
@@ -379,17 +405,21 @@ grouped_fb_latency <- df_latency %>%
 
 fb_median_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = 0.5))
 fb_p95_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .95))
-fb_p99_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .99)) 
+fb_p99_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .99))
 ```
 
 
-```{r, fig.height=6, fig.width=4}
-ggarrange(
-  fb_p99_ic %>% plot_latency_ic() %>% ggpar(legend = "none", ylab = "Latency (ms)", xlab = "Heap") + theme(text=element_text(size=13)),
-  fb_p95_ic %>% plot_latency_ic() %>% ggpar(legend = "top", ylab = "Latency (ms)", xlab = "Heap") + theme(text=element_text(size=13)), 
-  labels = c("95th", "99th"), font.label = list(face = "plain"),
-  ncol = 1
-) 
+```{r}
+quantile(
+  (df_latency %>% filter(batch_number != 0, benchmark %in% c("graph-bfs"), heap %in% c("256Mb")))$duration / 1e9,
+  0.99
+)
+```
+
+
+```{r, fig.height=3, fig.width=4}
+fb_p99_ic %>% plot_latency_ic() %>% ggpar(legend = "none", ylab = "Response Time (ms)", xlab = "", ylim = c(560, 570)) + theme(text=element_text(size=12))
+fb_p95_ic %>% plot_latency_ic() %>% ggpar(legend = "none", ylab = "Response Time (ms)", xlab = "", ylim = c(560, 570)) + theme(text=element_text(size=12)) 
 ```
 
 
