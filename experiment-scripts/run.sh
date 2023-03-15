@@ -88,10 +88,6 @@ compress_output() {
     zip -r $zip_fp ${exp_tag}*
 }
 
-echo_line() {
-        for i in $(seq 1 $(tput cols)); do echo -n '='; done
-        echo ""
-}
 
 
 for exp in $(seq 1 $N);
@@ -108,7 +104,8 @@ do
                 exit 1
         fi
 
-        echo_line
+        echo "-----------"
+
         execute_benchmark $exp_tag
 
         collect_results $exp_tag
