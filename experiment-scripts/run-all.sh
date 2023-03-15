@@ -1,15 +1,6 @@
 #!/bin/bash/
 
-INPUT_WD="/home/moranguinho/mestrado/serverless-memory-benchmark/inputs/"
-
-HEAP_SIZES=("512m")
-WARMUP=1
-N=1
-GCS=("G1")
-BENCHMARKS=("sleep")
-INPUT_FILES=("input-sleep-1.json")
-BATCH_SIZE=10
-CPUS=("2.0")
+source ./vars.env
 
 for heap_index in ${!HEAP_SIZES[@]}; do
     for gc in ${GCS[@]}; do
