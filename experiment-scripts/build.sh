@@ -1,19 +1,16 @@
 #!/bin/bash
 
-SKIP=false
+SKIP_DOCKER_INSTALL=false
 
 while getopts s: flag
 do
     case "${flag}" in
-        s) SKIP=${OPTARG};;
+        s) SKIP_DOCKER_INSTALL=${OPTARG};;
     esac
 done
 
 
-REPOSITORY=gc
-TAG=latest
-
-if [ $SKIP == false ] 
+if [ $SKIP_DOCKER_INSTALL == false ] 
 then
     # Install Docker -------------------------------------------
 
@@ -38,5 +35,5 @@ fi
 
 # Build the Benchmark's Docker image -----------------------
 
-sudo docker build --tag $REPOSITORY:$TAG --file ../docker/Dockerfile .
+sudo docker build --tag gc:latest --file ../docker/Dockerfile .
 
