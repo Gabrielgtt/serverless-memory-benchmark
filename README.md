@@ -44,10 +44,10 @@ If you are running on a remote machine, you can in background and monitor the be
 bash run-all.sh &
 ```
 
-4. Collect the results. The output is stored in directories created in the same directory where the scripts were executed. You will find logs from the GC, logs from docker and a results file with the execution time and allocated memory for each function call.
+4. Collect the results. The output is stored in directories created in the same directory where the scripts were executed. You will find logs from the GC, logs from docker and a results file with the execution time and allocated memory for each function call. The results will also be compressed into a zip file.
 
 
-## Benchmarks
+## Functions
 
 ### sleep
 
