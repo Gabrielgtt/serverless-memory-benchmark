@@ -248,6 +248,7 @@ grouped_fb_latency <- df_latency %>%
   group_by(gc, heap) %>%
   group_split()
 
+print("Calculating CIs for the tiny ARA functions")
 fb_median_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = 0.5))
 fb_p95_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .95))
 fb_p99_ic <- grouped_fb_latency %>% map_df(~calculate_quantile(., p = .99))
