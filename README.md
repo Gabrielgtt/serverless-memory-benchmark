@@ -44,7 +44,27 @@ If you are running on a remote machine, you can in background and monitor the be
 bash run-all.sh &
 ```
 
-4. Collect the results. The output is stored in directories created in the same directory where the scripts were executed. You will find logs from the GC, logs from docker and a results file with the execution time and allocated memory for each function call. The results will also be compressed into a zip file.
+4. Collect the results. The output is stored in the `output/` direcotry created in the same directory where the scripts were executed. You will find logs from the GC, logs from docker and a results file with the execution time and allocated memory for each function call. The results will also be compressed into a zip file.
+
+
+5. Plot the analysis. This script will generate pngs with the plots from the paper "Analysis of automatic memory management: the missing metrics on FaaS benchmarks". For this script to work, is recommended that you use the parameters set in `vars-template.env` back in step 2. The execution for the template experiment with all levels from all factors could last more than a day, so it is advised to run on a remote machine. When the experiments finish, run:
+```shell
+bash plot.sh
+```
+
+Note that you will need Rscript installed and the following libraries:
+```r
+library(tidyverse)
+library(patchwork)
+library(gt)
+library(boot)
+library(ggplot2)
+library(ggpubr)
+library(here)
+library(broom)
+library(genio)
+```
+
 
 
 ## Functions
