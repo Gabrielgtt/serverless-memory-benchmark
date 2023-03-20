@@ -17,6 +17,7 @@ library(here)
 library(broom)
 ```
 
+
 ```{r}
 source(here("read-input.R"))
 source(here("benchmark-plots.R"))
@@ -68,31 +69,20 @@ for (gc in all_gcs) {
 
 
 ```{r}
-df_latency <- df_latency %>%
-  mutate(heap = as.character(heap)) %>%
-  mutate(heap = substr(heap, 1, nchar(heap)-2)) %>%
-  mutate(heap = factor(heap, levels = c("256m", "512m", "1g")))
-
-
-df_latency <- df_latency %>%
-  mutate(
-    heap = case_when(
-      heap == "256m" ~ "256Mb",
-      heap == "512m" ~ "512Mb",
-      heap == "1g" ~ "1Gb"
-    )
-  )
-
-df_latency <- df_latency %>%
-  mutate(heap = factor(heap, levels = c("256Mb", "512Mb", "1Gb")))
-```
-
-```{r}
 df_latency <- map_df(experiments_info_latency, function(x) { 
   read_inputs(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]]) %>% 
     add_batch_number() %>%
     mutate(cores = case_when(cores == 1 ~ "single-core", cores == 2 ~ "dual-core")) %>%
-    mutate(cores = factor(cores, levels = c("single-core", "dual-core")))
+    mutate(cores = factor(cores, levels = c("single-core", "dual-core"))) %>%
+    mutate(heap = as.character(heap)) %>%
+    mutate(heap = substr(heap, 1, nchar(heap)-2)) %>%
+    mutate(
+      heap = case_when(
+        heap == "256m" ~ "256Mb",
+        heap == "512m" ~ "512Mb",
+        heap == "1g" ~ "1Gb"
+      )) %>%
+    mutate(heap = factor(heap, levels = c("256Mb", "512Mb", "1Gb")))
   })
 ```
 
@@ -138,6 +128,7 @@ ecdf_heavyslow_256m <- df_heavyslow %>%
   ggpar(
     xlab = "Response time (s)",
     ylab = "ECDF",
+    title = "Latency ECDF for Heavy ARA functions",
     xticks.by = 1
   ) +
   grids(linetype = "dashed") +
@@ -190,8 +181,8 @@ df_latency %>%
 ```
 
 
-```{r, fig.width=7,fig.height=4}
-df_latency %>% plot_ecdf_latency("graph-bfs", nticks = 50)
+```{r, fig.width=7,fig.height=5}
+df_latency %>% plot_ecdf_latency("graph-bfs", color_by = "heap", heaps = c("256Mb", "512Mb", "1Gb"), gcs = c("G1"), nticks = 500)
 ```
 
 
