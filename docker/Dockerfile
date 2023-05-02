@@ -5,10 +5,8 @@ RUN apt install -y maven
 RUN apt install -y git
 RUN apt install -y ffmpeg
 
-ENV OWNER_REPO="Gabrielgtt/serverless-memory-benchmark"
-
-ADD https://api.github.com/repos/$OWNER_REPO/git/refs/heads/main /.git-hashref
-RUN git clone https://github.com/$OWNER_REPO.git
+RUN mkdir serverless-memory-benchmark
+COPY . serverless-memory-benchmark
 
 ENV ORCHESTRATOR_PATH="serverless-memory-benchmark/Orchestrator"
 WORKDIR ${ORCHESTRATOR_PATH}
