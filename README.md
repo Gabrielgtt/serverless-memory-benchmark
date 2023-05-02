@@ -82,7 +82,7 @@ Generate dynamic HTML from a template.
 ```json
 {
     "user": "test",
-    "lenght": 100000
+    "length": 100000
 }
 ```
 

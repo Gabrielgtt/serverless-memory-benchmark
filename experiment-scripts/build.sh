@@ -35,5 +35,7 @@ fi
 
 # Build the Benchmark's Docker image -----------------------
 
-sudo docker build --tag gc:latest --file ../docker/Dockerfile .
+# Entering the root folder of the project ------------------
+cd ..
+sudo docker build --tag gc:latest --file docker/Dockerfile .
 

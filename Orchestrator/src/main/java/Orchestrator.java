@@ -119,7 +119,7 @@ public class Orchestrator {
 
     private static FileWriter createOutputFile(String benchmark) throws IOException {
         FileWriter file = new FileWriter("results/" + benchmark + ".csv");
-        file.write("benchmark,req_id,init_time_ns,end_time_ns,duration_ns,alloc_b\n");
+        file.write("benchmark,req_id,init_time_ns,end_time_ns,duration_ns,alloc_b,cpuTimeProcess,cpuUsedProcess\n");
         return file;
     }
 
